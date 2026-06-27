@@ -1,5 +1,9 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import fastifyStatic from '@fastify/static';
 import rateLimit from '@fastify/rate-limit';
 import { authPlugin } from './plugins/auth.js';
 import { databasePlugin } from './plugins/database.js';
@@ -14,6 +18,8 @@ import { auditRoutes } from './modules/audit/routes.js';
 import { cosoRoutes } from './modules/coso/routes.js';
 import { piecesRoutes } from './modules/pieces/routes.js';
 import { fiscalPeriodRoutes } from './modules/fiscal-periods/routes.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export async function buildApp() {
   const app = Fastify({
@@ -53,6 +59,23 @@ export async function buildApp() {
   await app.register(cosoRoutes, { prefix: '/api/coso' });
   await app.register(piecesRoutes, { prefix: '/api/pieces' });
   await app.register(fiscalPeriodRoutes, { prefix: '/api/fiscal-periods' });
+
+  // Serve frontend static files in production
+  const frontendDist = path.resolve(__dirname, '../../frontend/dist');
+  if (process.env.NODE_ENV === 'production' && fs.existsSync(frontendDist)) {
+    await app.register(fastifyStatic, {
+      root: frontendDist,
+      prefix: '/',
+      wildcard: false,
+    });
+
+    app.setNotFoundHandler((request, reply) => {
+      if (request.url.startsWith('/api/')) {
+        return reply.status(404).send({ error: 'Not Found' });
+      }
+      return reply.sendFile('index.html');
+    });
+  }
 
   return app;
 }
