@@ -83,7 +83,27 @@ function ReportViewer({ type, periodId }: { type: ReportType; periodId: string }
     <div className="rounded-xl bg-white p-6 shadow-sm border">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-900 capitalize">{type.replace(/-/g, ' ')}</h2>
-        <span className="text-xs text-gray-400">Generated {new Date(data.generatedAt).toLocaleString()}</span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              api.get(`/reports/${type}/export`, { params: { periodId }, responseType: 'blob' })
+                .then((res) => {
+                  const url = window.URL.createObjectURL(new Blob([res.data]));
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${type}.csv`;
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                })
+                .catch(() => {});
+            }}
+            className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </button>
+          <span className="text-xs text-gray-400">Generated {new Date(data.generatedAt).toLocaleString()}</span>
+        </div>
       </div>
 
       {type === 'trial-balance' && <TrialBalanceTable data={data} />}

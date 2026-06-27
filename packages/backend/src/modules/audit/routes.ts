@@ -1,27 +1,57 @@
 import type { FastifyInstance } from 'fastify';
-import { desc, eq } from 'drizzle-orm';
-import { auditLogs } from '../../db/schema.js';
+import { desc, eq, and, gte, lte, sql } from 'drizzle-orm';
+import { auditLogs, users } from '../../db/schema.js';
 import { Permission } from '@bais/shared';
 import { requirePermission } from '../../plugins/auth.js';
 import { NotFoundError } from '../../plugins/error-handler.js';
 
 export async function auditRoutes(app: FastifyInstance) {
-  // List audit logs
   app.get('/logs', {
     preHandler: [app.authenticate, requirePermission(Permission.AUDIT_VIEW)],
   }, async (request) => {
-    const { page = 1, limit = 50 } = request.query as { page?: number; limit?: number };
+    const { page = 1, limit = 50, action, resource, userId, from, to } = request.query as {
+      page?: number; limit?: number; action?: string; resource?: string;
+      userId?: string; from?: string; to?: string;
+    };
     const offset = (page - 1) * limit;
 
-    const logs = await app.db.select().from(auditLogs)
+    const conditions = [];
+    if (action) conditions.push(eq(auditLogs.action, action));
+    if (resource) conditions.push(eq(auditLogs.resource, resource));
+    if (userId) conditions.push(eq(auditLogs.userId, userId));
+    if (from) conditions.push(gte(auditLogs.timestamp, new Date(from)));
+    if (to) conditions.push(lte(auditLogs.timestamp, new Date(to)));
+
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const logs = await app.db
+      .select({
+        id: auditLogs.id,
+        userId: auditLogs.userId,
+        userName: users.fullName,
+        action: auditLogs.action,
+        resource: auditLogs.resource,
+        resourceId: auditLogs.resourceId,
+        details: auditLogs.details,
+        ipAddress: auditLogs.ipAddress,
+        blockchainTxId: auditLogs.blockchainTxId,
+        timestamp: auditLogs.timestamp,
+      })
+      .from(auditLogs)
+      .innerJoin(users, eq(auditLogs.userId, users.id))
+      .where(where)
       .orderBy(desc(auditLogs.timestamp))
       .limit(limit)
       .offset(offset);
 
-    return { data: logs, page, limit };
+    const [countResult] = await app.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(auditLogs)
+      .where(where);
+
+    return { data: logs, page, limit, total: countResult?.count ?? 0 };
   });
 
-  // Get single audit log
   app.get('/logs/:id', {
     preHandler: [app.authenticate, requirePermission(Permission.AUDIT_VIEW)],
   }, async (request) => {
@@ -40,7 +70,6 @@ export async function auditRoutes(app: FastifyInstance) {
     return { ...log, blockchainProof };
   });
 
-  // Verify integrity
   app.get('/integrity-check', {
     preHandler: [app.authenticate, requirePermission(Permission.AUDIT_VERIFY)],
   }, async () => {

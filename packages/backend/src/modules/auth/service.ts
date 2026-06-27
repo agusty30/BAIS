@@ -81,6 +81,41 @@ export class AuthService {
     };
   }
 
+  async updateProfile(userId: string, data: { fullName: string }) {
+    const [user] = await this.app.db
+      .update(users)
+      .set({ fullName: data.fullName, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning({
+        id: users.id,
+        email: users.email,
+        fullName: users.fullName,
+        role: users.role,
+      });
+
+    if (!user) throw new NotFoundError('User');
+    return user;
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const [user] = await this.app.db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user) throw new NotFoundError('User');
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) throw new UnauthorizedError('Current password is incorrect');
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.app.db
+      .update(users)
+      .set({ passwordHash, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  }
+
   async listUsers(page: number, limit: number) {
     const offset = (page - 1) * limit;
     const results = await this.app.db

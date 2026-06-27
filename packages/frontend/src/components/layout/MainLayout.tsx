@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth';
 import {
   LayoutDashboard,
@@ -15,7 +15,9 @@ import {
   Menu,
   X,
   Blocks,
+  Settings,
 } from 'lucide-react';
+import { NotificationBell } from '../NotificationBell';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -28,10 +30,19 @@ const navigation = [
   { name: 'PIECES Analysis', href: '/pieces', icon: Activity },
 ];
 
+const adminNavigation = [
+  { name: 'User Management', href: '/users', icon: Users },
+];
+
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+
+  const allNavItems = user?.role === 'admin'
+    ? [...navigation, ...adminNavigation]
+    : navigation;
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -50,7 +61,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto px-3 py-4">
-            {navigation.map((item) => {
+            {allNavItems.map((item) => {
               const isActive = location.pathname === item.href;
               return (
                 <Link
@@ -73,13 +84,20 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           {/* User info */}
           <div className="border-t p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-700">
+              <button
+                onClick={() => { navigate('/settings'); setSidebarOpen(false); }}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-700 hover:bg-primary-200 transition-colors"
+                title="Settings"
+              >
                 {user?.fullName?.charAt(0) || 'U'}
-              </div>
-              <div className="flex-1 min-w-0">
+              </button>
+              <button
+                onClick={() => { navigate('/settings'); setSidebarOpen(false); }}
+                className="flex-1 min-w-0 text-left hover:opacity-80"
+              >
                 <p className="truncate text-sm font-medium text-gray-900">{user?.fullName}</p>
                 <p className="truncate text-xs text-gray-500 capitalize">{user?.role}</p>
-              </div>
+              </button>
               <button
                 onClick={logout}
                 className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
@@ -111,6 +129,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             <Menu className="h-5 w-5" />
           </button>
           <div className="ml-auto flex items-center gap-4">
+            <NotificationBell />
             <div className="flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
               <span className="h-2 w-2 rounded-full bg-green-500" />
               Blockchain: Mock Mode

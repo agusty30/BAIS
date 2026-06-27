@@ -33,6 +33,21 @@ export async function authRoutes(app: FastifyInstance) {
     return authService.getProfile(request.user.sub);
   });
 
+  app.patch('/me', {
+    preHandler: [app.authenticate],
+  }, async (request) => {
+    const { fullName } = request.body as { fullName: string };
+    return authService.updateProfile(request.user.sub, { fullName });
+  });
+
+  app.post('/change-password', {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const { currentPassword, newPassword } = request.body as { currentPassword: string; newPassword: string };
+    await authService.changePassword(request.user.sub, currentPassword, newPassword);
+    return reply.send({ message: 'Password changed successfully' });
+  });
+
   // User management (Admin only)
   app.get('/users', {
     preHandler: [app.authenticate, requirePermission(Permission.USERS_MANAGE)],

@@ -8,6 +8,12 @@ import {
   Shield,
   Blocks,
 } from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell,
+} from 'recharts';
+
+const PIE_COLORS = ['#3b82f6', '#ef4444', '#8b5cf6', '#22c55e', '#f97316'];
 
 export function Dashboard() {
   const { user } = useAuthStore();
@@ -32,6 +38,11 @@ export function Dashboard() {
     queryFn: () => api.get('/reports/verify').then((r) => r.data),
   });
 
+  const { data: monthlySummary } = useQuery({
+    queryKey: ['monthly-summary'],
+    queryFn: () => api.get('/reports/monthly-summary').then((r) => r.data),
+  });
+
   const { data: piecesDashboard } = useQuery({
     queryKey: ['pieces-dashboard'],
     queryFn: () => api.get('/pieces/dashboard').then((r) => r.data),
@@ -54,6 +65,23 @@ export function Dashboard() {
     { name: 'Blockchain Blocks', value: String(verifyData?.latestBlock ?? '—'), icon: Blocks, color: 'bg-purple-500' },
   ];
 
+  const chartData = (monthlySummary?.data || []).map((m: any) => ({
+    month: m.month.slice(5),
+    Revenue: m.revenue / 100,
+    Expenses: m.expenses / 100,
+  }));
+
+  const accountsByType = (() => {
+    const counts: Record<string, number> = {};
+    for (const a of (accountsData?.data || [])) {
+      counts[a.type] = (counts[a.type] || 0) + 1;
+    }
+    return Object.entries(counts).map(([name, value]) => ({
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      value,
+    }));
+  })();
+
   return (
     <div className="space-y-6">
       <div>
@@ -61,7 +89,6 @@ export function Dashboard() {
         <p className="mt-1 text-sm text-gray-500">Welcome back, {user?.fullName}</p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <div key={stat.name} className="rounded-xl bg-white p-6 shadow-sm border">
@@ -78,7 +105,66 @@ export function Dashboard() {
         ))}
       </div>
 
-      {/* PIECES + COSO Overview */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-xl bg-white p-6 shadow-sm border">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Revenue vs Expenses</h2>
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={chartData}>
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} tickFormatter={(v: number) => `$${v.toLocaleString()}`} />
+                <Tooltip formatter={(v: number) => `$${v.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} />
+                <Bar dataKey="Revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Expenses" fill="#f97316" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-[250px] items-center justify-center text-sm text-gray-400">
+              No posted transactions yet
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl bg-white p-6 shadow-sm border">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Account Distribution</h2>
+          {accountsByType.length > 0 ? (
+            <div className="flex items-center gap-6">
+              <ResponsiveContainer width="60%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={accountsByType}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={90}
+                    dataKey="value"
+                    label={({ name, value }) => `${name} (${value})`}
+                    labelLine={false}
+                  >
+                    {accountsByType.map((_, idx) => (
+                      <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="space-y-2">
+                {accountsByType.map((item, idx) => (
+                  <div key={item.name} className="flex items-center gap-2 text-sm">
+                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }} />
+                    <span className="text-gray-600">{item.name}</span>
+                    <span className="font-medium text-gray-900">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex h-[250px] items-center justify-center text-sm text-gray-400">
+              No accounts yet
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl bg-white p-6 shadow-sm border">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">PIECES Analysis</h2>
@@ -88,15 +174,10 @@ export function Dashboard() {
                 <span className="w-28 text-sm text-gray-600">{dim.label}</span>
                 <div className="flex-1">
                   <div className="h-2.5 rounded-full bg-gray-100">
-                    <div
-                      className="h-2.5 rounded-full bg-primary-500 transition-all"
-                      style={{ width: `${dim.score}%` }}
-                    />
+                    <div className="h-2.5 rounded-full bg-primary-500 transition-all" style={{ width: `${dim.score}%` }} />
                   </div>
                 </div>
-                <span className="w-10 text-right text-sm font-medium text-gray-900">
-                  {dim.score}%
-                </span>
+                <span className="w-10 text-right text-sm font-medium text-gray-900">{dim.score}%</span>
               </div>
             ))}
           </div>
@@ -110,26 +191,16 @@ export function Dashboard() {
                 <span className="w-40 text-sm text-gray-600">{comp.label}</span>
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((level) => (
-                    <div
-                      key={level}
-                      className={`h-6 w-6 rounded ${
-                        level <= (comp.currentScore || 0)
-                          ? 'bg-green-500'
-                          : 'bg-gray-200'
-                      }`}
-                    />
+                    <div key={level} className={`h-6 w-6 rounded ${level <= (comp.currentScore || 0) ? 'bg-green-500' : 'bg-gray-200'}`} />
                   ))}
                 </div>
-                <span className="text-sm font-medium text-gray-900">
-                  {comp.currentScore || 0}/5
-                </span>
+                <span className="text-sm font-medium text-gray-900">{comp.currentScore || 0}/5</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Recent Activity */}
       <div className="rounded-xl bg-white p-6 shadow-sm border">
         <h2 className="mb-4 text-lg font-semibold text-gray-900">Recent Activity</h2>
         <div className="space-y-3">

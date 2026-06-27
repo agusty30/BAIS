@@ -18,6 +18,7 @@ import { auditRoutes } from './modules/audit/routes.js';
 import { cosoRoutes } from './modules/coso/routes.js';
 import { piecesRoutes } from './modules/pieces/routes.js';
 import { fiscalPeriodRoutes } from './modules/fiscal-periods/routes.js';
+import { notificationRoutes } from './modules/notifications/routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -59,6 +60,7 @@ export async function buildApp() {
   await app.register(cosoRoutes, { prefix: '/api/coso' });
   await app.register(piecesRoutes, { prefix: '/api/pieces' });
   await app.register(fiscalPeriodRoutes, { prefix: '/api/fiscal-periods' });
+  await app.register(notificationRoutes, { prefix: '/api/notifications' });
 
   // Serve frontend static files in production
   const frontendDist = path.resolve(__dirname, '../../frontend/dist');
