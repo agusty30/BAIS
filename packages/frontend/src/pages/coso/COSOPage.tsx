@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
-import { Target, CheckCircle, AlertCircle, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Target, CheckCircle, AlertCircle } from 'lucide-react';
 
 const SYSTEM_CONTROLS: Record<string, string[]> = {
   control_environment: [
@@ -51,15 +51,13 @@ export function COSOPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">COSO Internal Control Framework</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Evaluate internal controls across the five COSO components
-        </p>
+        <h1 className="page-title">COSO Internal Control Framework</h1>
+        <p className="page-subtitle">Evaluate internal controls across the five COSO components</p>
       </div>
 
-      <div className="rounded-xl bg-gradient-to-r from-primary-500 to-primary-700 p-6 text-white">
+      <div className="rounded-2xl bg-gradient-to-r from-primary-600 to-primary-800 p-6 text-white shadow-elevated">
         <p className="text-sm font-medium opacity-80">Overall COSO Maturity Score</p>
-        <p className="mt-1 text-4xl font-bold">
+        <p className="mt-1 text-4xl font-bold font-display">
           {(data?.overallScore || 0).toFixed(1)} / 5.0
         </p>
         <p className="mt-1 text-sm opacity-80">
@@ -68,40 +66,40 @@ export function COSOPage() {
       </div>
 
       {isLoading ? (
-        <div className="text-center text-gray-500 py-8">Loading...</div>
+        <div className="text-center text-slate-500 dark:text-slate-400 py-8">Loading...</div>
       ) : (
         <div className="space-y-4">
           {components.map((comp: any) => (
-            <div key={comp.component} className="rounded-xl bg-white p-6 shadow-sm border">
+            <div key={comp.component} className="card p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-semibold text-gray-900">{comp.label}</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-white">{comp.label}</h3>
                   <div className="mt-2 flex items-center gap-2">
                     <div className="flex gap-1">
                       {[1, 2, 3, 4, 5].map((level) => (
                         <div
                           key={level}
                           className={`h-4 w-8 rounded ${
-                            level <= (comp.currentScore || 0) ? 'bg-green-500' : 'bg-gray-200'
+                            level <= (comp.currentScore || 0) ? 'bg-success-500' : 'bg-slate-200 dark:bg-slate-700'
                           }`}
                         />
                       ))}
                     </div>
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       {maturityLabels[comp.currentScore || 0] || 'Not Evaluated'}
                     </span>
                   </div>
                   {comp.lastEvaluatedAt && (
-                    <p className="mt-1 text-xs text-gray-400">
+                    <p className="mt-1 text-xs text-slate-400">
                       Last evaluated: {new Date(comp.lastEvaluatedAt).toLocaleDateString()}
                     </p>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl font-bold text-primary-600">{comp.currentScore || 0}</span>
+                  <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">{comp.currentScore || 0}</span>
                   <button
                     onClick={() => setEvaluating(evaluating === comp.component ? null : comp.component)}
-                    className="rounded-lg bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700 hover:bg-primary-100"
+                    className="btn-secondary !py-1.5"
                   >
                     {evaluating === comp.component ? 'Cancel' : 'Evaluate'}
                   </button>
@@ -111,8 +109,8 @@ export function COSOPage() {
               <div className="mt-4 space-y-2">
                 {(comp.systemControls || []).map((control: string, idx: number) => (
                   <div key={idx} className="flex items-center gap-2 text-sm">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-gray-600">{control}</span>
+                    <CheckCircle className="h-4 w-4 text-success-500 dark:text-success-400" />
+                    <span className="text-slate-600 dark:text-slate-400">{control}</span>
                   </div>
                 ))}
               </div>
@@ -186,19 +184,15 @@ function EvaluationForm({
   };
 
   return (
-    <div className="mt-6 border-t pt-6 space-y-4">
-      <h4 className="font-medium text-gray-800">Evaluate: {label}</h4>
+    <div className="mt-6 border-t border-slate-200 dark:border-slate-700 pt-6 space-y-4">
+      <h4 className="font-medium text-slate-800 dark:text-white">Evaluate: {label}</h4>
 
-      {error && <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+      {error && <div className="error-box">{error}</div>}
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Fiscal Period</label>
-          <select
-            value={periodId}
-            onChange={(e) => setPeriodId(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-          >
+          <label className="label">Fiscal Period</label>
+          <select value={periodId} onChange={(e) => setPeriodId(e.target.value)} className="input-field">
             <option value="">Select period...</option>
             {(periods?.data || []).map((p: any) => (
               <option key={p.id} value={p.id}>{p.name}</option>
@@ -207,7 +201,7 @@ function EvaluationForm({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="label">
             Maturity Score: {score} — {maturityLabels[score]}
           </label>
           <input
@@ -217,28 +211,28 @@ function EvaluationForm({
             step="1"
             value={score}
             onChange={(e) => setScore(parseInt(e.target.value))}
-            className="w-full mt-2"
+            className="w-full mt-2 accent-primary-600"
           />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
+          <div className="flex justify-between text-xs text-slate-400 mt-1">
             {maturityLabels.slice(1).map((l, i) => <span key={i}>{i + 1}</span>)}
           </div>
         </div>
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">Control Evidence</label>
+        <label className="label mb-2">Control Evidence</label>
         <div className="space-y-3">
           {evidence.map((ev, idx) => (
-            <div key={idx} className="rounded-lg border p-3 space-y-2">
+            <div key={idx} className="rounded-xl border border-slate-200 dark:border-slate-700 p-3 space-y-2">
               <div className="flex items-center gap-3">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={ev.implemented}
                     onChange={(e) => updateEvidence(idx, 'implemented', e.target.checked)}
-                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    className="rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-700">{ev.control}</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-300">{ev.control}</span>
                 </label>
               </div>
               {ev.implemented && (
@@ -246,7 +240,7 @@ function EvaluationForm({
                   <select
                     value={ev.effectiveness}
                     onChange={(e) => updateEvidence(idx, 'effectiveness', e.target.value)}
-                    className="rounded border border-gray-300 px-2 py-1 text-xs focus:border-primary-500 focus:outline-none"
+                    className="input-field !py-1 !text-xs"
                   >
                     <option value="effective">Effective</option>
                     <option value="partially_effective">Partially Effective</option>
@@ -260,17 +254,8 @@ function EvaluationForm({
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button
-          onClick={onClose}
-          className="rounded-lg border px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSubmit}
-          disabled={mutation.isPending}
-          className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
-        >
+        <button onClick={onClose} className="btn-secondary">Cancel</button>
+        <button onClick={handleSubmit} disabled={mutation.isPending} className="btn-primary">
           {mutation.isPending ? 'Submitting...' : 'Submit Evaluation'}
         </button>
       </div>

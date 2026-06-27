@@ -32,60 +32,64 @@ export function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-50 to-blue-100 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary-100">
-            <Blocks className="h-8 w-8 text-primary-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">BAIS</h1>
-          <p className="mt-1 text-sm text-gray-500">Blockchain Accounting Information System</p>
-        </div>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-[#0f1d3d] to-slate-900 px-4">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary-900/20 via-transparent to-transparent" />
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>
-          )}
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-              placeholder="admin@bais.local"
-              required
-            />
+      <div className="relative w-full max-w-md animate-scale-in">
+        <div className="rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-modal border border-slate-200 dark:border-slate-700">
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-success-500/15 border border-success-500/20">
+              <Blocks className="h-8 w-8 text-success-500" />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-display tracking-tight">BAIS</h1>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Blockchain Accounting Information System</p>
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-              placeholder="Enter your password"
-              required
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="error-box">{error}</div>
+            )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
+            <div>
+              <label className="label">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input-field"
+                placeholder="admin@bais.local"
+                required
+              />
+            </div>
 
-        <div className="mt-6 rounded-lg bg-gray-50 p-4">
-          <p className="mb-2 text-xs font-medium text-gray-500">Demo Credentials</p>
-          <div className="space-y-1 text-xs text-gray-600">
-            <p><span className="font-medium">Admin:</span> admin@bais.local / admin123!@#</p>
-            <p><span className="font-medium">Accountant:</span> accountant@bais.local / password123!</p>
-            <p><span className="font-medium">Manager:</span> manager@bais.local / password123!</p>
+            <div>
+              <label className="label">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input-field"
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full"
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+
+          <div className="mt-6 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Demo Credentials</p>
+            <div className="space-y-1 font-mono text-xs text-slate-600 dark:text-slate-400">
+              <p><span className="font-semibold text-slate-700 dark:text-slate-300">Admin:</span> admin@bais.local / admin123!@#</p>
+              <p><span className="font-semibold text-slate-700 dark:text-slate-300">Accountant:</span> accountant@bais.local / password123!</p>
+              <p><span className="font-semibold text-slate-700 dark:text-slate-300">Manager:</span> manager@bais.local / password123!</p>
+            </div>
           </div>
         </div>
       </div>

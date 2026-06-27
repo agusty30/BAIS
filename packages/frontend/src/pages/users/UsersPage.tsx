@@ -12,81 +12,78 @@ export function UsersPage() {
   });
 
   const roleColors: Record<string, string> = {
-    admin: 'bg-red-100 text-red-700',
-    accountant: 'bg-blue-100 text-blue-700',
-    manager: 'bg-purple-100 text-purple-700',
-    auditor: 'bg-amber-100 text-amber-700',
-    viewer: 'bg-gray-100 text-gray-700',
+    admin: 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300',
+    accountant: 'bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300',
+    manager: 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300',
+    auditor: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300',
+    viewer: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-          <p className="mt-1 text-sm text-gray-500">Manage system users and their roles</p>
+          <h1 className="page-title">User Management</h1>
+          <p className="page-subtitle">Manage system users and their roles</p>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700"
-        >
+        <button onClick={() => setShowCreate(true)} className="btn-primary">
           <Plus className="h-4 w-4" />
           Add User
         </button>
       </div>
 
-      <div className="rounded-xl bg-white shadow-sm border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-6 py-3 text-left font-medium text-gray-500">Name</th>
-              <th className="px-6 py-3 text-left font-medium text-gray-500">Email</th>
-              <th className="px-6 py-3 text-left font-medium text-gray-500">Role</th>
-              <th className="px-6 py-3 text-left font-medium text-gray-500">Status</th>
-              <th className="px-6 py-3 text-left font-medium text-gray-500">Created</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {isLoading ? (
-              <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-500">Loading...</td></tr>
-            ) : (data?.data || []).length === 0 ? (
-              <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-500">No users found</td></tr>
-            ) : (
-              (data?.data || []).map((user: any) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-xs font-medium text-primary-700">
-                        {user.fullName?.charAt(0) || '?'}
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="table-header sticky top-0 z-10">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold text-slate-500 dark:text-slate-400">Name</th>
+                <th className="px-4 py-3 text-left font-semibold text-slate-500 dark:text-slate-400">Email</th>
+                <th className="px-4 py-3 text-left font-semibold text-slate-500 dark:text-slate-400">Role</th>
+                <th className="px-4 py-3 text-left font-semibold text-slate-500 dark:text-slate-400">Status</th>
+                <th className="px-4 py-3 text-left font-semibold text-slate-500 dark:text-slate-400">Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">Loading...</td></tr>
+              ) : (data?.data || []).length === 0 ? (
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">No users found</td></tr>
+              ) : (
+                (data?.data || []).map((user: any) => (
+                  <tr key={user.id} className="table-row">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-700/20 text-xs font-medium text-primary-600 dark:text-primary-300">
+                          {user.fullName?.charAt(0) || '?'}
+                        </div>
+                        <span className="font-medium text-slate-900 dark:text-white">{user.fullName}</span>
                       </div>
-                      <span className="font-medium text-gray-900">{user.fullName}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-3 text-gray-600">{user.email}</td>
-                  <td className="px-6 py-3">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${roleColors[user.role] || ''}`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3">
-                    {user.isActive ? (
-                      <span className="flex items-center gap-1 text-xs text-green-600">
-                        <UserCheck className="h-3.5 w-3.5" /> Active
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-xs text-red-500">
-                        <UserX className="h-3.5 w-3.5" /> Inactive
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-3 text-gray-500 text-xs">
-                    {new Date(user.createdAt).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{user.email}</td>
+                    <td className="px-4 py-3">
+                      <span className={`badge capitalize ${roleColors[user.role] || ''}`}>{user.role}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {user.isActive ? (
+                        <span className="flex items-center gap-1 text-xs text-success-600 dark:text-success-400">
+                          <UserCheck className="h-3.5 w-3.5" /> Active
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-xs text-red-500 dark:text-red-400">
+                          <UserX className="h-3.5 w-3.5" /> Inactive
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {showCreate && <CreateUserModal onClose={() => setShowCreate(false)} />}
@@ -118,61 +115,33 @@ function CreateUserModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+    <div className="modal-backdrop">
+      <div className="modal-card max-w-md">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Create User</h2>
-          <button onClick={onClose} className="rounded p-1 hover:bg-gray-100">
-            <X className="h-5 w-5 text-gray-400" />
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white font-display">Create User</h2>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <X className="h-5 w-5 text-slate-400" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+          {error && <div className="error-box">{error}</div>}
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Full Name</label>
-            <input
-              type="text"
-              value={form.fullName}
-              onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-              placeholder="John Doe"
-              required
-            />
+            <label className="label">Full Name</label>
+            <input type="text" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} className="input-field" placeholder="John Doe" required />
           </div>
-
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-              placeholder="user@bais.local"
-              required
-            />
+            <label className="label">Email</label>
+            <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input-field" placeholder="user@bais.local" required />
           </div>
-
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-              placeholder="Min. 8 characters"
-              required
-            />
+            <label className="label">Password</label>
+            <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="input-field" placeholder="Min. 8 characters" required />
           </div>
-
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Role</label>
-            <select
-              value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-            >
+            <label className="label">Role</label>
+            <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="input-field">
               <option value="viewer">Viewer</option>
               <option value="accountant">Accountant</option>
               <option value="manager">Manager</option>
@@ -182,14 +151,8 @@ function CreateUserModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={mutation.isPending}
-              className="flex-1 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
-            >
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
+            <button type="submit" disabled={mutation.isPending} className="btn-primary flex-1">
               {mutation.isPending ? 'Creating...' : 'Create User'}
             </button>
           </div>

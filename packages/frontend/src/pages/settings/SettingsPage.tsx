@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
-import { Save, Lock, CheckCircle } from 'lucide-react';
+import { Save, Lock } from 'lucide-react';
 
 export function SettingsPage() {
   const { user, login, accessToken, refreshToken } = useAuthStore();
@@ -51,123 +51,108 @@ export function SettingsPage() {
   };
 
   const roleColors: Record<string, string> = {
-    admin: 'bg-red-100 text-red-700',
-    accountant: 'bg-blue-100 text-blue-700',
-    manager: 'bg-purple-100 text-purple-700',
-    auditor: 'bg-amber-100 text-amber-700',
-    viewer: 'bg-gray-100 text-gray-700',
+    admin: 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300',
+    accountant: 'bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300',
+    manager: 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300',
+    auditor: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300',
+    viewer: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
   };
 
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="mt-1 text-sm text-gray-500">Manage your profile and security</p>
+        <h1 className="page-title">Settings</h1>
+        <p className="page-subtitle">Manage your profile and security</p>
       </div>
 
-      {/* Profile Section */}
-      <div className="rounded-xl bg-white p-6 shadow-sm border">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Profile</h2>
+      <div className="card p-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white font-display mb-4">Profile</h2>
 
         {profileMsg && (
-          <div className={`mb-4 rounded-lg p-3 text-sm ${profileMsg.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+          <div className={`mb-4 ${profileMsg.type === 'success' ? 'success-box' : 'error-box'}`}>
             {profileMsg.text}
           </div>
         )}
 
         <form onSubmit={handleProfileSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
+            <label className="label">Email</label>
             <input
               type="email"
               value={user?.email || ''}
               disabled
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-500 dark:text-slate-400"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Full Name</label>
-            <input
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-            />
+            <label className="label">Full Name</label>
+            <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="input-field" />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Role</label>
+            <label className="label">Role</label>
             <div>
-              <span className={`rounded-full px-3 py-1 text-sm font-medium capitalize ${roleColors[user?.role || ''] || ''}`}>
+              <span className={`badge capitalize ${roleColors[user?.role || ''] || ''}`}>
                 {user?.role}
               </span>
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={profileMutation.isPending}
-            className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
-          >
+          <button type="submit" disabled={profileMutation.isPending} className="btn-primary">
             <Save className="h-4 w-4" />
             {profileMutation.isPending ? 'Saving...' : 'Save Profile'}
           </button>
         </form>
       </div>
 
-      {/* Password Section */}
-      <div className="rounded-xl bg-white p-6 shadow-sm border">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Lock className="h-5 w-5 text-gray-400" /> Change Password
+      <div className="card p-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white font-display mb-4 flex items-center gap-2">
+          <Lock className="h-5 w-5 text-slate-400" /> Change Password
         </h2>
 
         {passwordMsg && (
-          <div className={`mb-4 rounded-lg p-3 text-sm ${passwordMsg.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+          <div className={`mb-4 ${passwordMsg.type === 'success' ? 'success-box' : 'error-box'}`}>
             {passwordMsg.text}
           </div>
         )}
 
         <form onSubmit={handlePasswordSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Current Password</label>
+            <label className="label">Current Password</label>
             <input
               type="password"
               value={passwords.currentPassword}
               onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              className="input-field"
               required
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">New Password</label>
+            <label className="label">New Password</label>
             <input
               type="password"
               value={passwords.newPassword}
               onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              className="input-field"
               placeholder="Min. 8 characters"
               required
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Confirm New Password</label>
+            <label className="label">Confirm New Password</label>
             <input
               type="password"
               value={passwords.confirmPassword}
               onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              className="input-field"
               required
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={passwordMutation.isPending}
-            className="flex items-center gap-2 rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-900 disabled:opacity-50"
-          >
+          <button type="submit" disabled={passwordMutation.isPending} className="inline-flex items-center gap-2 rounded-xl bg-slate-800 dark:bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-900 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors">
             <Lock className="h-4 w-4" />
             {passwordMutation.isPending ? 'Changing...' : 'Change Password'}
           </button>

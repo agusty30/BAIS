@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
-import { TrendingUp, TrendingDown, Minus, Plus, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Plus } from 'lucide-react';
 
 const METRICS_DEFINITION: Record<string, { name: string; unit: string; description: string }[]> = {
   performance: [
@@ -49,42 +49,40 @@ export function PiecesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">PIECES Analysis</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Performance, Information, Economics, Control, Efficiency, Service
-        </p>
+        <h1 className="page-title">PIECES Analysis</h1>
+        <p className="page-subtitle">Performance, Information, Economics, Control, Efficiency, Service</p>
       </div>
 
-      <div className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-white">
+      <div className="rounded-2xl bg-gradient-to-r from-success-500 to-emerald-600 p-6 text-white shadow-elevated">
         <p className="text-sm font-medium opacity-80">Overall System Score</p>
-        <p className="mt-1 text-4xl font-bold">{data?.overallScore || 0}%</p>
+        <p className="mt-1 text-4xl font-bold font-display">{data?.overallScore || 0}%</p>
         <p className="mt-1 text-sm opacity-80">Across all 6 PIECES dimensions</p>
       </div>
 
       {isLoading ? (
-        <div className="text-center text-gray-500 py-8">Loading...</div>
+        <div className="text-center text-slate-500 dark:text-slate-400 py-8">Loading...</div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {dimensions.map((dim: any) => (
-            <div key={dim.dimension} className="rounded-xl bg-white p-6 shadow-sm border">
+            <div key={dim.dimension} className="card p-6">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900">{dim.label}</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-white">{dim.label}</h3>
                 {dim.trend === 'up' ? (
-                  <TrendingUp className="h-5 w-5 text-green-500" />
+                  <TrendingUp className="h-5 w-5 text-success-500 dark:text-success-400" />
                 ) : dim.trend === 'down' ? (
-                  <TrendingDown className="h-5 w-5 text-red-500" />
+                  <TrendingDown className="h-5 w-5 text-red-500 dark:text-red-400" />
                 ) : (
-                  <Minus className="h-5 w-5 text-gray-400" />
+                  <Minus className="h-5 w-5 text-slate-400" />
                 )}
               </div>
 
               <div className="mt-4">
-                <span className="text-3xl font-bold text-gray-900">{dim.score}%</span>
-                <div className="mt-3 h-2 rounded-full bg-gray-100">
+                <span className="text-3xl font-bold text-slate-900 dark:text-white font-display">{dim.score}%</span>
+                <div className="mt-3 h-2 rounded-full bg-slate-100 dark:bg-slate-700">
                   <div
                     className={`h-2 rounded-full transition-all ${
-                      dim.score >= 80 ? 'bg-green-500' :
-                      dim.score >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                      dim.score >= 80 ? 'bg-success-500' :
+                      dim.score >= 60 ? 'bg-amber-500' : 'bg-red-500'
                     }`}
                     style={{ width: `${dim.score}%` }}
                   />
@@ -94,15 +92,15 @@ export function PiecesPage() {
               <div className="mt-4 space-y-1.5">
                 {(dim.definitions || []).slice(0, 3).map((def: any, idx: number) => (
                   <div key={idx} className="flex items-center justify-between text-xs">
-                    <span className="text-gray-500 truncate mr-2">{def.description}</span>
-                    <span className="font-medium text-gray-700 shrink-0">{def.unit}</span>
+                    <span className="text-slate-500 dark:text-slate-400 truncate mr-2">{def.description}</span>
+                    <span className="font-medium text-slate-700 dark:text-slate-300 shrink-0">{def.unit}</span>
                   </div>
                 ))}
               </div>
 
               <button
                 onClick={() => setRecording(recording === dim.dimension ? null : dim.dimension)}
-                className="mt-4 flex w-full items-center justify-center gap-1 rounded-lg border border-primary-200 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700 hover:bg-primary-100"
+                className="mt-4 flex w-full items-center justify-center gap-1 rounded-xl border border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/30 px-3 py-1.5 text-sm font-medium text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors"
               >
                 <Plus className="h-3.5 w-3.5" /> Record Metric
               </button>
@@ -170,16 +168,12 @@ function RecordMetricForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mt-4 border-t pt-4 space-y-3">
-      {error && <div className="rounded-lg bg-red-50 p-2 text-xs text-red-700">{error}</div>}
+    <form onSubmit={handleSubmit} className="mt-4 border-t border-slate-200 dark:border-slate-700 pt-4 space-y-3">
+      {error && <div className="error-box !text-xs !p-2">{error}</div>}
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-700">Metric</label>
-        <select
-          value={selectedMetric}
-          onChange={(e) => setSelectedMetric(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-        >
+        <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">Metric</label>
+        <select value={selectedMetric} onChange={(e) => setSelectedMetric(e.target.value)} className="input-field !py-1.5 !text-sm">
           {definitions.map((def) => (
             <option key={def.name} value={def.name}>{def.description}</option>
           ))}
@@ -188,25 +182,14 @@ function RecordMetricForm({
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-700">
+          <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
             Value ({selectedDef?.unit || ''})
           </label>
-          <input
-            type="number"
-            step="any"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-            placeholder="0"
-          />
+          <input type="number" step="any" value={value} onChange={(e) => setValue(e.target.value)} className="input-field !py-1.5 !text-sm" placeholder="0" />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-700">Period</label>
-          <select
-            value={periodId}
-            onChange={(e) => setPeriodId(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-          >
+          <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">Period</label>
+          <select value={periodId} onChange={(e) => setPeriodId(e.target.value)} className="input-field !py-1.5 !text-sm">
             <option value="">Select...</option>
             {(periods?.data || []).map((p: any) => (
               <option key={p.id} value={p.id}>{p.name}</option>
@@ -216,18 +199,8 @@ function RecordMetricForm({
       </div>
 
       <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex-1 rounded-lg border px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={mutation.isPending}
-          className="flex-1 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-700 disabled:opacity-50"
-        >
+        <button type="button" onClick={onClose} className="btn-secondary flex-1 !py-1.5 !text-xs">Cancel</button>
+        <button type="submit" disabled={mutation.isPending} className="btn-primary flex-1 !py-1.5 !text-xs">
           {mutation.isPending ? 'Saving...' : 'Save'}
         </button>
       </div>

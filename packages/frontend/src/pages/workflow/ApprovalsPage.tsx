@@ -13,16 +13,16 @@ export function ApprovalsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Approval Workflows</h1>
-        <p className="mt-1 text-sm text-gray-500">Review and approve pending transactions</p>
+        <h1 className="page-title">Approval Workflows</h1>
+        <p className="page-subtitle">Review and approve pending transactions</p>
       </div>
 
       {isLoading ? (
-        <div className="text-center text-gray-500 py-8">Loading...</div>
+        <div className="text-center text-slate-500 dark:text-slate-400 py-8">Loading...</div>
       ) : (data?.data || []).length === 0 ? (
-        <div className="rounded-xl bg-white p-12 text-center shadow-sm border">
-          <CheckSquare className="mx-auto h-12 w-12 text-gray-300" />
-          <p className="mt-4 text-gray-500">No pending approvals</p>
+        <div className="card p-12 text-center">
+          <CheckSquare className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-600" />
+          <p className="mt-4 text-slate-500 dark:text-slate-400">No pending approvals</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -61,38 +61,28 @@ function ApprovalCard({ item, queryClient }: { item: any; queryClient: any }) {
   const isPending = approveMutation.isPending || rejectMutation.isPending;
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm border">
+    <div className="card p-6">
       {feedback && (
-        <div className={`mb-3 rounded-lg p-3 text-sm ${feedback.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+        <div className={`mb-3 ${feedback.type === 'success' ? 'success-box' : 'error-box'}`}>
           {feedback.message}
         </div>
       )}
 
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="font-medium text-gray-900">
+          <h3 className="font-medium text-slate-900 dark:text-white">
             {item.journalEntry?.description || 'Journal Entry'}
           </h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Entry #{item.journalEntry?.entryNumber} &bull; Step {item.workflow.currentStep} of {item.workflow.totalSteps}
           </p>
-          <p className="mt-1 text-lg font-semibold text-gray-900">
+          <p className="mt-1 text-lg font-semibold font-mono text-slate-900 dark:text-white">
             ${((item.journalEntry?.totalAmount || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </p>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={() => approveMutation.mutate()}
-            disabled={isPending}
-            className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-          >
-            Approve
-          </button>
-          <button
-            onClick={() => setShowComments(true)}
-            disabled={isPending}
-            className="rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50"
-          >
+          <button onClick={() => approveMutation.mutate()} disabled={isPending} className="btn-success !py-2">Approve</button>
+          <button onClick={() => setShowComments(true)} disabled={isPending} className="inline-flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/30 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50 disabled:opacity-50 transition-colors">
             Reject
           </button>
         </div>
@@ -104,23 +94,12 @@ function ApprovalCard({ item, queryClient }: { item: any; queryClient: any }) {
             value={comments}
             onChange={(e) => setComments(e.target.value)}
             placeholder="Add comments (required for rejection)..."
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            className="input-field"
             rows={2}
           />
           <div className="flex gap-2">
-            <button
-              onClick={() => rejectMutation.mutate()}
-              disabled={isPending || !comments.trim()}
-              className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-            >
-              Confirm Reject
-            </button>
-            <button
-              onClick={() => setShowComments(false)}
-              className="rounded-lg border px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
+            <button onClick={() => rejectMutation.mutate()} disabled={isPending || !comments.trim()} className="btn-danger !py-1.5 !text-xs">Confirm Reject</button>
+            <button onClick={() => setShowComments(false)} className="btn-secondary !py-1.5 !text-xs">Cancel</button>
           </div>
         </div>
       )}
