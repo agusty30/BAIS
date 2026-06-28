@@ -4,6 +4,7 @@ import { api } from '../../api/client';
 import { Plus, X, TrendingUp, TrendingDown } from 'lucide-react';
 import { formatCurrency } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
+import { CurrencySelector } from '../../components/CurrencySelector';
 
 export function BudgetPage() {
   const [showCreate, setShowCreate] = useState(false);
@@ -41,10 +42,13 @@ export function BudgetPage() {
           <h1 className="page-title">Budget Management</h1>
           <p className="page-subtitle">Plan and track budget allocations</p>
         </div>
-        <button onClick={() => setShowCreate(true)} className="btn-primary">
-          <Plus className="h-4 w-4" />
-          Set Budget
-        </button>
+        <div className="flex items-center gap-3">
+          <CurrencySelector />
+          <button onClick={() => setShowCreate(true)} className="btn-primary">
+            <Plus className="h-4 w-4" />
+            Set Budget
+          </button>
+        </div>
       </div>
 
       {summary && (

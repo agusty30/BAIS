@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { FileText, Plus, X, Send, CheckCircle, Trash2 } from 'lucide-react';
-import { formatCurrency } from '../../lib/currency';
+import { formatCurrency, parseCurrencyInput, formatCurrencyInput } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
+import { CurrencySelector } from '../../components/CurrencySelector';
 
 export function JournalPage() {
   const [showCreate, setShowCreate] = useState(false);
@@ -40,10 +41,13 @@ export function JournalPage() {
           <h1 className="page-title">Journal Entries</h1>
           <p className="page-subtitle">Create and manage journal entries</p>
         </div>
-        <button onClick={() => setShowCreate(true)} className="btn-primary">
-          <Plus className="h-4 w-4" />
-          New Entry
-        </button>
+        <div className="flex items-center gap-3">
+          <CurrencySelector />
+          <button onClick={() => setShowCreate(true)} className="btn-primary">
+            <Plus className="h-4 w-4" />
+            New Entry
+          </button>
+        </div>
       </div>
 
       <div className="card overflow-hidden">
@@ -186,38 +190,33 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
     setLines(updated);
   };
 
-  const parseAmount = (text: string): number => {
-    const cleaned = text.replace(/[^0-9.]/g, '');
-    const val = parseFloat(cleaned);
-    if (isNaN(val)) return 0;
-    return Math.round(val * 100);
-  };
-
   const handleDebitChange = (idx: number, text: string) => {
     const updated = [...debitTexts];
     updated[idx] = text;
     setDebitTexts(updated);
+    const cents = parseCurrencyInput(text, currency);
+    updateLine(idx, 'debitAmount', cents);
   };
 
   const handleCreditChange = (idx: number, text: string) => {
     const updated = [...creditTexts];
     updated[idx] = text;
     setCreditTexts(updated);
+    const cents = parseCurrencyInput(text, currency);
+    updateLine(idx, 'creditAmount', cents);
   };
 
   const handleDebitBlur = (idx: number) => {
-    const cents = parseAmount(debitTexts[idx]);
-    updateLine(idx, 'debitAmount', cents);
+    const cents = lines[idx].debitAmount;
     const updated = [...debitTexts];
-    updated[idx] = cents > 0 ? (cents / 100).toFixed(2) : '';
+    updated[idx] = formatCurrencyInput(cents, currency);
     setDebitTexts(updated);
   };
 
   const handleCreditBlur = (idx: number) => {
-    const cents = parseAmount(creditTexts[idx]);
-    updateLine(idx, 'creditAmount', cents);
+    const cents = lines[idx].creditAmount;
     const updated = [...creditTexts];
-    updated[idx] = cents > 0 ? (cents / 100).toFixed(2) : '';
+    updated[idx] = formatCurrencyInput(cents, currency);
     setCreditTexts(updated);
   };
 

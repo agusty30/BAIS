@@ -4,6 +4,7 @@ import { api } from '../../api/client';
 import { Plus, FileText, X } from 'lucide-react';
 import { formatCurrency } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
+import { CurrencySelector } from '../../components/CurrencySelector';
 
 const statusColors: Record<string, string> = {
   draft: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400',
@@ -44,10 +45,13 @@ export function InvoicesPage() {
           <h1 className="page-title">Invoices</h1>
           <p className="page-subtitle">Accounts receivable and payable</p>
         </div>
-        <button onClick={() => setShowCreate(true)} className="btn-primary">
-          <Plus className="h-4 w-4" />
-          New Invoice
-        </button>
+        <div className="flex items-center gap-3">
+          <CurrencySelector />
+          <button onClick={() => setShowCreate(true)} className="btn-primary">
+            <Plus className="h-4 w-4" />
+            New Invoice
+          </button>
+        </div>
       </div>
 
       {arApSummary && (

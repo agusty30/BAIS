@@ -4,6 +4,7 @@ import { api } from '../../api/client';
 import { BarChart3, Download, CheckCircle, AlertTriangle } from 'lucide-react';
 import { formatCurrency } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
+import { CurrencySelector } from '../../components/CurrencySelector';
 
 type ReportType = 'trial-balance' | 'income-statement' | 'balance-sheet';
 
@@ -27,9 +28,12 @@ export function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="page-title">Financial Reports</h1>
-        <p className="page-subtitle">Generate and view financial statements</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="page-title">Financial Reports</h1>
+          <p className="page-subtitle">Generate and view financial statements</p>
+        </div>
+        <CurrencySelector />
       </div>
 
       <div>

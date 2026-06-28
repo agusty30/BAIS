@@ -4,6 +4,7 @@ import { api } from '../../api/client';
 import { BookOpenCheck, Download } from 'lucide-react';
 import { formatCurrency } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
+import { CurrencySelector } from '../../components/CurrencySelector';
 
 export function GeneralLedgerPage() {
   const [accountId, setAccountId] = useState('');
@@ -40,7 +41,8 @@ export function GeneralLedgerPage() {
           <h1 className="page-title">General Ledger</h1>
           <p className="page-subtitle">Complete record of all financial transactions</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <CurrencySelector />
           <BookOpenCheck className="h-5 w-5 text-primary-500" />
           <span className="text-sm text-slate-500 dark:text-slate-400">
             {data?.total || 0} entries

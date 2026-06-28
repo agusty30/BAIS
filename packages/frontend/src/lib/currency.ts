@@ -49,6 +49,27 @@ export function formatCurrency(cents: number, currencyCode: CurrencyCode = 'IDR'
   })}`;
 }
 
+export function parseCurrencyInput(text: string, currencyCode: CurrencyCode = 'IDR'): number {
+  const cleaned = text.replace(/[^0-9.]/g, '');
+  const val = parseFloat(cleaned);
+  if (isNaN(val) || val <= 0) return 0;
+
+  if (currencyCode === 'IDR') {
+    return Math.round(val * 100);
+  }
+  const config = CURRENCIES[currencyCode];
+  return Math.round(val * config.rate * 100);
+}
+
+export function formatCurrencyInput(cents: number, currencyCode: CurrencyCode = 'IDR'): string {
+  if (cents <= 0) return '';
+  if (currencyCode === 'IDR') {
+    return String(cents / 100);
+  }
+  const config = CURRENCIES[currencyCode];
+  return (cents / 100 / config.rate).toFixed(2);
+}
+
 export function formatCurrencyShort(cents: number, currencyCode: CurrencyCode = 'IDR'): string {
   const config = CURRENCIES[currencyCode];
   const baseAmount = cents / 100;

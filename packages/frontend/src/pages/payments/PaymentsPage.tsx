@@ -4,6 +4,7 @@ import { api } from '../../api/client';
 import { CreditCard, X } from 'lucide-react';
 import { formatCurrency } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
+import { CurrencySelector } from '../../components/CurrencySelector';
 
 const methodLabels: Record<string, string> = {
   cash: 'Cash',
@@ -31,10 +32,13 @@ export function PaymentsPage() {
           <h1 className="page-title">Payments</h1>
           <p className="page-subtitle">Record and track payment transactions</p>
         </div>
-        <button onClick={() => setShowRecord(true)} className="btn-primary">
-          <CreditCard className="h-4 w-4" />
-          Record Payment
-        </button>
+        <div className="flex items-center gap-3">
+          <CurrencySelector />
+          <button onClick={() => setShowRecord(true)} className="btn-primary">
+            <CreditCard className="h-4 w-4" />
+            Record Payment
+          </button>
+        </div>
       </div>
 
       <div className="card overflow-hidden">

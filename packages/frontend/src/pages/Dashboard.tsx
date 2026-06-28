@@ -3,6 +3,7 @@ import { api } from '../api/client';
 import { useAuthStore } from '../stores/auth';
 import { useCurrencyStore } from '../stores/currency';
 import { formatCurrency, formatCurrencyShort } from '../lib/currency';
+import { CurrencySelector } from '../components/CurrencySelector';
 import {
   BarChart3,
   FileText,
@@ -87,9 +88,12 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="page-title">Dashboard</h1>
-        <p className="page-subtitle">Welcome back, {user?.fullName}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-subtitle">Welcome back, {user?.fullName}</p>
+        </div>
+        <CurrencySelector />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
