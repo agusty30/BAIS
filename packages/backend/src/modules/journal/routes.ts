@@ -5,6 +5,7 @@ import { journalEntries, journalEntryLines, accountBalances } from '../../db/sch
 import { Permission, JournalEntryStatus, createJournalEntrySchema } from '@bais/shared';
 import { requirePermission } from '../../plugins/auth.js';
 import { NotFoundError, ValidationError } from '../../plugins/error-handler.js';
+import { createBlockchainRecord } from '../blockchain/service.js';
 
 export async function journalRoutes(app: FastifyInstance) {
   // List journal entries
@@ -108,12 +109,8 @@ export async function journalRoutes(app: FastifyInstance) {
 
     // Wrap posting in a transaction for atomicity
     const posted = await app.db.transaction(async (tx) => {
-      // Record on blockchain
-      const txId = await app.blockchain.submitTransaction(
-        'ledger',
-        'recordJournalEntry',
-        JSON.stringify({ id: entry.id, entryNumber: entry.entryNumber, date: entry.date, lines, totalAmount: entry.totalAmount }),
-      );
+      // Record on blockchain with hash chain
+      const { txId } = await createBlockchainRecord(tx as any, app.blockchain, entry, lines);
 
       // Update entry status and blockchain reference
       const [result] = await tx

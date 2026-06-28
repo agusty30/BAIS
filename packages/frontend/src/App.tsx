@@ -18,6 +18,7 @@ import { VendorsPage } from './pages/vendors/VendorsPage';
 import { InvoicesPage } from './pages/invoices/InvoicesPage';
 import { PaymentsPage } from './pages/payments/PaymentsPage';
 import { BudgetPage } from './pages/budget/BudgetPage';
+import { BlockchainExplorerPage } from './pages/blockchain/BlockchainExplorerPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -47,6 +48,7 @@ export default function App() {
                 <Route path="/budget" element={<BudgetPage />} />
                 <Route path="/reports" element={<ReportsPage />} />
                 <Route path="/audit" element={<AuditPage />} />
+                <Route path="/blockchain" element={<BlockchainExplorerPage />} />
                 <Route path="/coso" element={<COSOPage />} />
                 <Route path="/pieces" element={<PiecesPage />} />
                 <Route path="/users" element={<UsersPage />} />

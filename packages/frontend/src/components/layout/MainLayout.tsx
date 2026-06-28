@@ -65,6 +65,7 @@ const navSections: NavSection[] = [
     items: [
       { name: 'Reports', href: '/reports', icon: BarChart3 },
       { name: 'Audit Trail', href: '/audit', icon: Shield },
+      { name: 'Blockchain Explorer', href: '/blockchain', icon: Blocks },
       { name: 'COSO Framework', href: '/coso', icon: Target },
       { name: 'PIECES Analysis', href: '/pieces', icon: Activity },
     ],

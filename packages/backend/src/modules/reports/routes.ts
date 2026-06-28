@@ -4,6 +4,7 @@ import { accounts, accountBalances, journalEntries, journalEntryLines, fiscalPer
 import { Permission, AccountType } from '@bais/shared';
 import { requirePermission } from '../../plugins/auth.js';
 import { NotFoundError } from '../../plugins/error-handler.js';
+import { verifyChain, getChainStats } from '../blockchain/service.js';
 
 export async function reportRoutes(app: FastifyInstance) {
   // Monthly summary for dashboard charts
@@ -183,13 +184,21 @@ export async function reportRoutes(app: FastifyInstance) {
   app.get('/verify', {
     preHandler: [app.authenticate, requirePermission(Permission.REPORTS_VIEW)],
   }, async () => {
-    const status = app.blockchain.getStatus();
+    const stats = await getChainStats(app.db, app.blockchain);
+    const verification = await verifyChain(app.db);
     return {
-      blockchainMode: status.mode,
-      connected: status.connected,
-      latestBlock: status.latestBlock,
-      verified: true,
-      message: 'All records consistent between database and blockchain',
+      blockchainMode: stats.blockchainMode,
+      connected: stats.blockchainConnected,
+      latestBlock: stats.latestBlock,
+      verified: verification.valid,
+      totalRecords: verification.totalRecords,
+      verifiedCount: verification.verifiedCount,
+      invalidCount: verification.invalidRecords.length,
+      brokenLinks: verification.brokenLinks.length,
+      merkleRoot: stats.merkleRoot,
+      message: verification.valid
+        ? 'All records consistent between database and blockchain'
+        : `Integrity issues detected: ${verification.invalidRecords.length} invalid records, ${verification.brokenLinks.length} broken links`,
     };
   });
 

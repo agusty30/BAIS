@@ -37,8 +37,8 @@ export function Dashboard() {
   });
 
   const { data: verifyData } = useQuery({
-    queryKey: ['blockchain-verify'],
-    queryFn: () => api.get('/reports/verify').then((r) => r.data),
+    queryKey: ['blockchain-stats'],
+    queryFn: () => api.get('/blockchain/stats').then((r) => r.data),
   });
 
   const { data: monthlySummary } = useQuery({

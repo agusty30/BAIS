@@ -28,6 +28,7 @@ import { invoiceRoutes } from './modules/invoices/routes.js';
 import { paymentRoutes } from './modules/payments/routes.js';
 import { budgetRoutes } from './modules/budget/routes.js';
 import { settingsRoutes } from './modules/settings/routes.js';
+import { blockchainRoutes } from './modules/blockchain/routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const startTime = Date.now();
@@ -125,6 +126,7 @@ export async function buildApp() {
   await app.register(paymentRoutes, { prefix: '/api/payments' });
   await app.register(budgetRoutes, { prefix: '/api/budget' });
   await app.register(settingsRoutes, { prefix: '/api/settings' });
+  await app.register(blockchainRoutes, { prefix: '/api/blockchain' });
 
   // Serve frontend static files in production
   const frontendDist = path.resolve(__dirname, '../../frontend/dist');
