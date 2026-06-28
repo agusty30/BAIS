@@ -185,9 +185,11 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
   };
 
   const updateLine = (idx: number, field: keyof JournalLine, value: any) => {
-    const updated = [...lines];
-    updated[idx] = { ...updated[idx], [field]: value };
-    setLines(updated);
+    setLines(prev => {
+      const updated = [...prev];
+      updated[idx] = { ...updated[idx], [field]: value };
+      return updated;
+    });
   };
 
   const handleDebitChange = (idx: number, text: string) => {
@@ -195,7 +197,11 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
     updated[idx] = text;
     setDebitTexts(updated);
     const cents = parseCurrencyInput(text, currency);
-    updateLine(idx, 'debitAmount', cents);
+    setLines(prev => {
+      const u = [...prev];
+      u[idx] = { ...u[idx], debitAmount: cents };
+      return u;
+    });
   };
 
   const handleCreditChange = (idx: number, text: string) => {
@@ -203,7 +209,11 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
     updated[idx] = text;
     setCreditTexts(updated);
     const cents = parseCurrencyInput(text, currency);
-    updateLine(idx, 'creditAmount', cents);
+    setLines(prev => {
+      const u = [...prev];
+      u[idx] = { ...u[idx], creditAmount: cents };
+      return u;
+    });
   };
 
   const handleDebitBlur = (idx: number) => {
@@ -227,11 +237,23 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
     setError('');
     if (!form.fiscalPeriodId) { setError('Select a fiscal period'); return; }
     if (!form.description.trim()) { setError('Description is required'); return; }
-    if (lines.some((l) => !l.accountId)) { setError('All lines must have an account'); return; }
-    if (lines.some((l) => l.debitAmount === 0 && l.creditAmount === 0)) { setError('Each line must have a debit or credit'); return; }
-    if (lines.some((l) => l.debitAmount > 0 && l.creditAmount > 0)) { setError('A line cannot have both debit and credit'); return; }
-    if (!isBalanced) { setError('Total debits must equal total credits'); return; }
-    mutation.mutate({ ...form, lines });
+
+    // Re-parse amounts from text inputs as safety net
+    const finalLines = lines.map((line, idx) => ({
+      ...line,
+      debitAmount: parseCurrencyInput(debitTexts[idx] || '', currency),
+      creditAmount: parseCurrencyInput(creditTexts[idx] || '', currency),
+    }));
+
+    if (finalLines.some((l) => !l.accountId)) { setError('All lines must have an account'); return; }
+    if (finalLines.some((l) => l.debitAmount === 0 && l.creditAmount === 0)) { setError('Each line must have a debit or credit amount'); return; }
+    if (finalLines.some((l) => l.debitAmount > 0 && l.creditAmount > 0)) { setError('A line cannot have both debit and credit'); return; }
+
+    const td = finalLines.reduce((sum, l) => sum + l.debitAmount, 0);
+    const tc = finalLines.reduce((sum, l) => sum + l.creditAmount, 0);
+    if (td !== tc || td === 0) { setError(`Total debits (${formatCurrency(td, currency)}) must equal total credits (${formatCurrency(tc, currency)})`); return; }
+
+    mutation.mutate({ ...form, lines: finalLines });
   };
 
   return (
@@ -353,7 +375,7 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
 
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
-            <button type="submit" disabled={mutation.isPending || !isBalanced} className="btn-primary flex-1">
+            <button type="submit" disabled={mutation.isPending} className="btn-primary flex-1">
               {mutation.isPending ? 'Creating...' : 'Create Entry'}
             </button>
           </div>

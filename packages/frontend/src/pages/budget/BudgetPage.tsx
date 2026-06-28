@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { Plus, X, TrendingUp, TrendingDown } from 'lucide-react';
-import { formatCurrency } from '../../lib/currency';
+import { formatCurrency, parseCurrencyInput } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
 import { CurrencySelector } from '../../components/CurrencySelector';
 
@@ -149,6 +149,8 @@ export function BudgetPage() {
 
 function SetBudgetModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
+  const { currency } = useCurrencyStore();
+  const [amountText, setAmountText] = useState('');
   const [form, setForm] = useState({ accountId: '', fiscalPeriodId: '', budgetAmount: 0, notes: '' });
   const [error, setError] = useState('');
 
@@ -172,10 +174,17 @@ function SetBudgetModal({ onClose }: { onClose: () => void }) {
     onError: (err: any) => setError(err.response?.data?.message || 'Failed to set budget'),
   });
 
+  const handleAmountChange = (text: string) => {
+    setAmountText(text);
+    setForm(prev => ({ ...prev, budgetAmount: parseCurrencyInput(text, currency) }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.accountId || !form.fiscalPeriodId) { setError('Account and period are required'); return; }
-    mutation.mutate(form);
+    const budgetAmount = parseCurrencyInput(amountText, currency);
+    if (budgetAmount <= 0) { setError('Budget amount must be greater than 0'); return; }
+    mutation.mutate({ ...form, budgetAmount });
   };
 
   return (
@@ -208,8 +217,8 @@ function SetBudgetModal({ onClose }: { onClose: () => void }) {
             </select>
           </div>
           <div>
-            <label className="label">Budget Amount (cents) *</label>
-            <input type="number" value={form.budgetAmount} onChange={(e) => setForm({ ...form, budgetAmount: Number(e.target.value) })} className="input-field" min={0} required />
+            <label className="label">Budget Amount ({currency}) *</label>
+            <input type="text" inputMode="decimal" value={amountText} onChange={(e) => handleAmountChange(e.target.value)} className="input-field" placeholder={currency === 'IDR' ? '0' : '0.00'} required />
           </div>
           <div>
             <label className="label">Notes</label>

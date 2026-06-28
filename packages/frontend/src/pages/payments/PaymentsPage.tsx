@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { CreditCard, X } from 'lucide-react';
-import { formatCurrency } from '../../lib/currency';
+import { formatCurrency, parseCurrencyInput } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
 import { CurrencySelector } from '../../components/CurrencySelector';
 
@@ -84,6 +84,7 @@ export function PaymentsPage() {
 function RecordPaymentModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
   const { currency } = useCurrencyStore();
+  const [amountText, setAmountText] = useState('');
   const [form, setForm] = useState({
     invoiceId: '',
     amount: 0,
@@ -111,11 +112,17 @@ function RecordPaymentModal({ onClose }: { onClose: () => void }) {
     onError: (err: any) => setError(err.response?.data?.message || 'Failed to record payment'),
   });
 
+  const handleAmountChange = (text: string) => {
+    setAmountText(text);
+    setForm(prev => ({ ...prev, amount: parseCurrencyInput(text, currency) }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.invoiceId) { setError('Select an invoice'); return; }
-    if (form.amount <= 0) { setError('Amount must be positive'); return; }
-    mutation.mutate(form);
+    const amount = parseCurrencyInput(amountText, currency);
+    if (amount <= 0) { setError('Amount must be positive'); return; }
+    mutation.mutate({ ...form, amount });
   };
 
   return (
@@ -142,8 +149,8 @@ function RecordPaymentModal({ onClose }: { onClose: () => void }) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Amount (cents) *</label>
-              <input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} className="input-field" min={1} required />
+              <label className="label">Amount ({currency}) *</label>
+              <input type="text" inputMode="decimal" value={amountText} onChange={(e) => handleAmountChange(e.target.value)} className="input-field" placeholder={currency === 'IDR' ? '0' : '0.00'} required />
             </div>
             <div>
               <label className="label">Date *</label>

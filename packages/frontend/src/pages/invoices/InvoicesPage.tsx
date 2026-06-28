@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { Plus, FileText, X } from 'lucide-react';
-import { formatCurrency } from '../../lib/currency';
+import { formatCurrency, parseCurrencyInput } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
 import { CurrencySelector } from '../../components/CurrencySelector';
 
@@ -148,6 +148,8 @@ export function InvoicesPage() {
 
 function CreateInvoiceModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
+  const { currency } = useCurrencyStore();
+  const [amountText, setAmountText] = useState('');
   const [form, setForm] = useState({
     type: 'receivable' as 'receivable' | 'payable',
     customerId: '',
@@ -179,14 +181,21 @@ function CreateInvoiceModal({ onClose }: { onClose: () => void }) {
     onError: (err: any) => setError(err.response?.data?.message || 'Failed to create invoice'),
   });
 
+  const handleAmountChange = (text: string) => {
+    setAmountText(text);
+    setForm(prev => ({ ...prev, totalAmount: parseCurrencyInput(text, currency) }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    const totalAmount = parseCurrencyInput(amountText, currency);
+    if (totalAmount <= 0) { setError('Amount must be greater than 0'); return; }
     const payload: any = {
       type: form.type,
       date: form.date,
       dueDate: form.dueDate,
-      totalAmount: form.totalAmount,
+      totalAmount,
       description: form.description,
     };
     if (form.type === 'receivable') payload.customerId = form.customerId || null;
@@ -244,8 +253,8 @@ function CreateInvoiceModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
           <div>
-            <label className="label">Amount (in cents) *</label>
-            <input type="number" value={form.totalAmount} onChange={(e) => setForm({ ...form, totalAmount: Number(e.target.value) })} className="input-field" min={1} required />
+            <label className="label">Amount ({currency}) *</label>
+            <input type="text" inputMode="decimal" value={amountText} onChange={(e) => handleAmountChange(e.target.value)} className="input-field" placeholder={currency === 'IDR' ? '0' : '0.00'} required />
           </div>
           <div>
             <label className="label">Description *</label>
