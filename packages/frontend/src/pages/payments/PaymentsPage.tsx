@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { CreditCard, X } from 'lucide-react';
+import { formatCurrency } from '../../lib/currency';
+import { useCurrencyStore } from '../../stores/currency';
 
 const methodLabels: Record<string, string> = {
   cash: 'Cash',
@@ -13,13 +15,14 @@ const methodLabels: Record<string, string> = {
 
 export function PaymentsPage() {
   const [showRecord, setShowRecord] = useState(false);
+  const { currency } = useCurrencyStore();
+  const fc = (cents: number) => formatCurrency(cents, currency);
 
   const { data, isLoading } = useQuery({
     queryKey: ['payments'],
     queryFn: () => api.get('/payments?limit=50').then((r) => r.data),
   });
 
-  const formatCurrency = (cents: number) => `Rp ${(cents / 100).toLocaleString('id-ID')}`;
 
   return (
     <div className="space-y-6">
@@ -55,7 +58,7 @@ export function PaymentsPage() {
                 <tr key={p.id} className="table-row">
                   <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-300">{new Date(p.date).toLocaleDateString()}</td>
                   <td className="px-6 py-3 text-sm font-mono text-slate-500 dark:text-slate-400">{p.invoiceId.slice(0, 8)}...</td>
-                  <td className="px-6 py-3 text-sm text-right font-mono font-medium text-slate-900 dark:text-white">{formatCurrency(p.amount)}</td>
+                  <td className="px-6 py-3 text-sm text-right font-mono font-medium text-slate-900 dark:text-white">{fc(p.amount)}</td>
                   <td className="px-6 py-3 text-sm text-center">
                     <span className="badge bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                       {methodLabels[p.method] || p.method}
@@ -76,6 +79,7 @@ export function PaymentsPage() {
 
 function RecordPaymentModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
+  const { currency } = useCurrencyStore();
   const [form, setForm] = useState({
     invoiceId: '',
     amount: 0,
@@ -127,7 +131,7 @@ function RecordPaymentModal({ onClose }: { onClose: () => void }) {
               <option value="">Select invoice...</option>
               {unpaidInvoices.map((inv: any) => (
                 <option key={inv.id} value={inv.id}>
-                  {inv.invoiceNumber} — Rp {((inv.totalAmount - inv.paidAmount) / 100).toLocaleString('id-ID')} remaining
+                  {inv.invoiceNumber} — {formatCurrency(inv.totalAmount - inv.paidAmount, currency)} remaining
                 </option>
               ))}
             </select>

@@ -2,10 +2,14 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { useAuthStore } from '../../stores/auth';
-import { Save, Lock } from 'lucide-react';
+import { useCurrencyStore } from '../../stores/currency';
+import { CURRENCIES, EXCHANGE_RATE_DATE } from '../../lib/currency';
+import type { CurrencyCode } from '../../lib/currency';
+import { Save, Lock, DollarSign } from 'lucide-react';
 
 export function SettingsPage() {
   const { user, login, accessToken, refreshToken } = useAuthStore();
+  const { currency, setCurrency } = useCurrencyStore();
   const queryClient = useQueryClient();
 
   const [fullName, setFullName] = useState(user?.fullName || '');
@@ -104,6 +108,33 @@ export function SettingsPage() {
             {profileMutation.isPending ? 'Saving...' : 'Save Profile'}
           </button>
         </form>
+      </div>
+
+      <div className="card p-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white font-display mb-4 flex items-center gap-2">
+          <DollarSign className="h-5 w-5 text-slate-400" /> Currency
+        </h2>
+        <div className="space-y-4">
+          <div>
+            <label className="label">Display Currency</label>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+              className="input-field max-w-xs"
+            >
+              {Object.values(CURRENCIES).map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.symbol} — {c.name} ({c.code})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-3 text-sm text-slate-600 dark:text-slate-400">
+            <p className="font-medium text-slate-700 dark:text-slate-300 mb-1">Exchange Rate</p>
+            <p>1 USD = Rp {CURRENCIES.USD.rate.toLocaleString('id-ID')}</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Rate snapshot: {EXCHANGE_RATE_DATE}</p>
+          </div>
+        </div>
       </div>
 
       <div className="card p-6">

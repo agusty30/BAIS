@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { BookOpenCheck, Download } from 'lucide-react';
+import { formatCurrency } from '../../lib/currency';
+import { useCurrencyStore } from '../../stores/currency';
 
 export function GeneralLedgerPage() {
   const [accountId, setAccountId] = useState('');
   const [periodId, setPeriodId] = useState('');
+  const { currency } = useCurrencyStore();
 
   const { data: accounts } = useQuery({
     queryKey: ['accounts-flat'],
@@ -28,10 +31,7 @@ export function GeneralLedgerPage() {
     },
   });
 
-  const formatCurrency = (cents: number) => {
-    if (!cents) return '-';
-    return `Rp ${(cents / 100).toLocaleString('id-ID')}`;
-  };
+  const fc = (cents: number) => formatCurrency(cents, currency);
 
   return (
     <div className="space-y-6">
@@ -101,9 +101,9 @@ export function GeneralLedgerPage() {
                     <span className="ml-2 text-slate-900 dark:text-white">{entry.accountName}</span>
                   </td>
                   <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-300 max-w-[200px] truncate">{entry.description}</td>
-                  <td className="px-6 py-3 text-sm text-right font-mono text-slate-900 dark:text-white">{formatCurrency(entry.debitAmount)}</td>
-                  <td className="px-6 py-3 text-sm text-right font-mono text-slate-900 dark:text-white">{formatCurrency(entry.creditAmount)}</td>
-                  <td className="px-6 py-3 text-sm text-right font-mono font-medium text-slate-900 dark:text-white">{formatCurrency(entry.runningBalance)}</td>
+                  <td className="px-6 py-3 text-sm text-right font-mono text-slate-900 dark:text-white">{fc(entry.debitAmount)}</td>
+                  <td className="px-6 py-3 text-sm text-right font-mono text-slate-900 dark:text-white">{fc(entry.creditAmount)}</td>
+                  <td className="px-6 py-3 text-sm text-right font-mono font-medium text-slate-900 dark:text-white">{fc(entry.runningBalance)}</td>
                 </tr>
               ))
             )}

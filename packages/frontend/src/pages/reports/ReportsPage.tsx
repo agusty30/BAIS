@@ -2,16 +2,17 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { BarChart3, Download, CheckCircle, AlertTriangle } from 'lucide-react';
+import { formatCurrency } from '../../lib/currency';
+import { useCurrencyStore } from '../../stores/currency';
 
 type ReportType = 'trial-balance' | 'income-statement' | 'balance-sheet';
-
-function formatAmount(cents: number) {
-  return '$' + (cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2 });
-}
 
 export function ReportsPage() {
   const [selectedReport, setSelectedReport] = useState<ReportType | null>(null);
   const [periodId, setPeriodId] = useState('');
+  const { currency } = useCurrencyStore();
+
+  const formatAmount = (cents: number) => formatCurrency(cents, currency);
 
   const { data: periods } = useQuery({
     queryKey: ['fiscal-periods'],
@@ -110,6 +111,8 @@ function ReportViewer({ type, periodId }: { type: ReportType; periodId: string }
 }
 
 function TrialBalanceTable({ data }: { data: any }) {
+  const { currency } = useCurrencyStore();
+  const formatAmount = (cents: number) => formatCurrency(cents, currency);
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -159,6 +162,8 @@ function TrialBalanceTable({ data }: { data: any }) {
 }
 
 function IncomeStatementTable({ data }: { data: any }) {
+  const { currency } = useCurrencyStore();
+  const formatAmount = (cents: number) => formatCurrency(cents, currency);
   return (
     <div className="space-y-6">
       <ReportSection title="Revenue" accounts={data.revenue?.accounts} total={data.revenue?.total} />
@@ -176,6 +181,8 @@ function IncomeStatementTable({ data }: { data: any }) {
 }
 
 function BalanceSheetTable({ data }: { data: any }) {
+  const { currency } = useCurrencyStore();
+  const formatAmount = (cents: number) => formatCurrency(cents, currency);
   return (
     <div className="space-y-6">
       <ReportSection title="Assets" accounts={data.assets?.accounts} total={data.assets?.total} />
@@ -203,6 +210,8 @@ function BalanceSheetTable({ data }: { data: any }) {
 }
 
 function ReportSection({ title, accounts, total }: { title: string; accounts?: any[]; total?: number }) {
+  const { currency } = useCurrencyStore();
+  const formatAmount = (cents: number) => formatCurrency(cents, currency);
   return (
     <div>
       <h3 className="mb-2 px-4 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{title}</h3>

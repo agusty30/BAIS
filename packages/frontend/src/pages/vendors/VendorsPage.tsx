@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { Plus, Search, X } from 'lucide-react';
+import { formatCurrency } from '../../lib/currency';
+import { useCurrencyStore } from '../../stores/currency';
 
 export function VendorsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState('');
+  const { currency } = useCurrencyStore();
 
   const { data, isLoading } = useQuery({
     queryKey: ['vendors', search],
@@ -16,7 +19,7 @@ export function VendorsPage() {
     },
   });
 
-  const formatCurrency = (cents: number) => `Rp ${(cents / 100).toLocaleString('id-ID')}`;
+  const fc = (cents: number) => formatCurrency(cents, currency);
 
   return (
     <div className="space-y-6">
@@ -68,7 +71,7 @@ export function VendorsPage() {
                   <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-300">{v.email || '-'}</td>
                   <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-300">{v.phone || '-'}</td>
                   <td className="px-6 py-3 text-sm text-center text-slate-600 dark:text-slate-300">{v.paymentTerms} days</td>
-                  <td className="px-6 py-3 text-sm text-right font-mono text-slate-900 dark:text-white">{formatCurrency(v.balance)}</td>
+                  <td className="px-6 py-3 text-sm text-right font-mono text-slate-900 dark:text-white">{fc(v.balance)}</td>
                   <td className="px-6 py-3 text-center">
                     <span className={`badge ${v.isActive ? 'bg-success-100 dark:bg-success-900/50 text-success-700 dark:text-success-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
                       {v.isActive ? 'Active' : 'Inactive'}

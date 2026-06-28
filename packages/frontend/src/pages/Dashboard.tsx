@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { useAuthStore } from '../stores/auth';
+import { useCurrencyStore } from '../stores/currency';
+import { formatCurrency, formatCurrencyShort } from '../lib/currency';
 import {
   BarChart3,
   FileText,
@@ -17,6 +19,7 @@ const PIE_COLORS = ['#1e3a8a', '#ef4444', '#8b5cf6', '#10b981', '#f97316'];
 
 export function Dashboard() {
   const { user } = useAuthStore();
+  const { currency } = useCurrencyStore();
 
   const { data: accountsData } = useQuery({
     queryKey: ['accounts-flat'],
@@ -112,10 +115,10 @@ export function Dashboard() {
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={chartData}>
                 <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#64748b' }} />
-                <YAxis tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(v: number) => `$${v.toLocaleString()}`} />
+                <YAxis tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(v: number) => formatCurrencyShort(v * 100, currency)} />
                 <Tooltip
                   contentStyle={{ backgroundColor: 'var(--tooltip-bg, #fff)', border: '1px solid var(--tooltip-border, #e2e8f0)', borderRadius: '8px', fontSize: '13px' }}
-                  formatter={(v: number) => `$${v.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                  formatter={(v: number) => formatCurrency(v * 100, currency)}
                 />
                 <Bar dataKey="Revenue" fill="#1e3a8a" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="Expenses" fill="#10b981" radius={[4, 4, 0, 0]} />

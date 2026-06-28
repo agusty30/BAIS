@@ -2,10 +2,14 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { Plus, X, TrendingUp, TrendingDown } from 'lucide-react';
+import { formatCurrency } from '../../lib/currency';
+import { useCurrencyStore } from '../../stores/currency';
 
 export function BudgetPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [periodId, setPeriodId] = useState('');
+  const { currency } = useCurrencyStore();
+  const fc = (cents: number) => formatCurrency(cents, currency);
 
   const { data: periods } = useQuery({
     queryKey: ['fiscal-periods'],
@@ -28,7 +32,6 @@ export function BudgetPage() {
     },
   });
 
-  const formatCurrency = (cents: number) => `Rp ${(cents / 100).toLocaleString('id-ID')}`;
   const utilizationPct = summary?.totalBudget ? Math.round((summary.totalActual / summary.totalBudget) * 100) : 0;
 
   return (
@@ -48,17 +51,17 @@ export function BudgetPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="card p-4">
             <div className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Budget</div>
-            <div className="mt-1 text-xl font-bold text-slate-900 dark:text-white font-display">{formatCurrency(summary.totalBudget)}</div>
+            <div className="mt-1 text-xl font-bold text-slate-900 dark:text-white font-display">{fc(summary.totalBudget)}</div>
           </div>
           <div className="card p-4">
             <div className="text-sm font-medium text-slate-500 dark:text-slate-400">Actual Spend</div>
-            <div className="mt-1 text-xl font-bold text-slate-900 dark:text-white font-display">{formatCurrency(summary.totalActual)}</div>
+            <div className="mt-1 text-xl font-bold text-slate-900 dark:text-white font-display">{fc(summary.totalActual)}</div>
           </div>
           <div className="card p-4">
             <div className="text-sm font-medium text-slate-500 dark:text-slate-400">Variance</div>
             <div className={`mt-1 text-xl font-bold font-display flex items-center gap-1 ${summary.totalVariance >= 0 ? 'text-success-600 dark:text-success-400' : 'text-red-600 dark:text-red-400'}`}>
               {summary.totalVariance >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-              {formatCurrency(Math.abs(summary.totalVariance))}
+              {fc(Math.abs(summary.totalVariance))}
             </div>
           </div>
           <div className="card p-4">
@@ -111,10 +114,10 @@ export function BudgetPage() {
                       <span className="ml-2 text-slate-900 dark:text-white">{item.accountName}</span>
                     </td>
                     <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-300">{item.periodName}</td>
-                    <td className="px-6 py-3 text-sm text-right font-mono text-slate-900 dark:text-white">{formatCurrency(item.budgetAmount)}</td>
-                    <td className="px-6 py-3 text-sm text-right font-mono text-slate-900 dark:text-white">{formatCurrency(item.actualAmount)}</td>
+                    <td className="px-6 py-3 text-sm text-right font-mono text-slate-900 dark:text-white">{fc(item.budgetAmount)}</td>
+                    <td className="px-6 py-3 text-sm text-right font-mono text-slate-900 dark:text-white">{fc(item.actualAmount)}</td>
                     <td className={`px-6 py-3 text-sm text-right font-mono ${item.variance >= 0 ? 'text-success-600 dark:text-success-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {formatCurrency(Math.abs(item.variance))}
+                      {fc(Math.abs(item.variance))}
                     </td>
                     <td className="px-6 py-3">
                       <div className="flex items-center justify-center gap-2">

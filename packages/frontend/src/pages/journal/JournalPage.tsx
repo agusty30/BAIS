@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { FileText, Plus, X, Send, CheckCircle, Trash2 } from 'lucide-react';
+import { formatCurrency } from '../../lib/currency';
+import { useCurrencyStore } from '../../stores/currency';
 
 export function JournalPage() {
   const [showCreate, setShowCreate] = useState(false);
   const queryClient = useQueryClient();
+  const { currency } = useCurrencyStore();
 
   const { data, isLoading } = useQuery({
     queryKey: ['journal-entries'],
@@ -69,7 +72,7 @@ export function JournalPage() {
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{new Date(entry.date).toLocaleDateString()}</td>
                     <td className="px-4 py-3 text-slate-900 dark:text-white">{entry.description}</td>
                     <td className="px-4 py-3 text-right font-mono text-slate-900 dark:text-white">
-                      ${(entry.totalAmount / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      {formatCurrency(entry.totalAmount, currency)}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`badge ${statusColors[entry.status] || ''}`}>
@@ -125,6 +128,7 @@ interface JournalLine {
 
 function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
+  const { currency } = useCurrencyStore();
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
@@ -136,6 +140,8 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
     { accountId: '', debitAmount: 0, creditAmount: 0, description: '' },
     { accountId: '', debitAmount: 0, creditAmount: 0, description: '' },
   ]);
+  const [debitTexts, setDebitTexts] = useState<string[]>(['', '']);
+  const [creditTexts, setCreditTexts] = useState<string[]>(['', '']);
 
   const { data: accounts } = useQuery({
     queryKey: ['accounts-flat'],
@@ -162,10 +168,16 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
   const totalCredit = lines.reduce((sum, l) => sum + l.creditAmount, 0);
   const isBalanced = totalDebit === totalCredit && totalDebit > 0;
 
-  const addLine = () => setLines([...lines, { accountId: '', debitAmount: 0, creditAmount: 0, description: '' }]);
+  const addLine = () => {
+    setLines([...lines, { accountId: '', debitAmount: 0, creditAmount: 0, description: '' }]);
+    setDebitTexts([...debitTexts, '']);
+    setCreditTexts([...creditTexts, '']);
+  };
   const removeLine = (idx: number) => {
     if (lines.length <= 2) return;
     setLines(lines.filter((_, i) => i !== idx));
+    setDebitTexts(debitTexts.filter((_, i) => i !== idx));
+    setCreditTexts(creditTexts.filter((_, i) => i !== idx));
   };
 
   const updateLine = (idx: number, field: keyof JournalLine, value: any) => {
@@ -173,6 +185,43 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
     updated[idx] = { ...updated[idx], [field]: value };
     setLines(updated);
   };
+
+  const parseAmount = (text: string): number => {
+    const cleaned = text.replace(/[^0-9.]/g, '');
+    const val = parseFloat(cleaned);
+    if (isNaN(val)) return 0;
+    return Math.round(val * 100);
+  };
+
+  const handleDebitChange = (idx: number, text: string) => {
+    const updated = [...debitTexts];
+    updated[idx] = text;
+    setDebitTexts(updated);
+  };
+
+  const handleCreditChange = (idx: number, text: string) => {
+    const updated = [...creditTexts];
+    updated[idx] = text;
+    setCreditTexts(updated);
+  };
+
+  const handleDebitBlur = (idx: number) => {
+    const cents = parseAmount(debitTexts[idx]);
+    updateLine(idx, 'debitAmount', cents);
+    const updated = [...debitTexts];
+    updated[idx] = cents > 0 ? (cents / 100).toFixed(2) : '';
+    setDebitTexts(updated);
+  };
+
+  const handleCreditBlur = (idx: number) => {
+    const cents = parseAmount(creditTexts[idx]);
+    updateLine(idx, 'creditAmount', cents);
+    const updated = [...creditTexts];
+    updated[idx] = cents > 0 ? (cents / 100).toFixed(2) : '';
+    setCreditTexts(updated);
+  };
+
+  const currencyLabel = currency === 'IDR' ? 'Rp' : '$';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,8 +286,8 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
                 <thead className="table-header">
                   <tr>
                     <th className="px-3 py-2 text-left font-semibold text-slate-500 dark:text-slate-400">Account</th>
-                    <th className="px-3 py-2 text-right font-semibold text-slate-500 dark:text-slate-400 w-28">Debit ($)</th>
-                    <th className="px-3 py-2 text-right font-semibold text-slate-500 dark:text-slate-400 w-28">Credit ($)</th>
+                    <th className="px-3 py-2 text-right font-semibold text-slate-500 dark:text-slate-400 w-32">Debit ({currencyLabel})</th>
+                    <th className="px-3 py-2 text-right font-semibold text-slate-500 dark:text-slate-400 w-32">Credit ({currencyLabel})</th>
                     <th className="px-3 py-2 w-8"></th>
                   </tr>
                 </thead>
@@ -254,10 +303,26 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
                         </select>
                       </td>
                       <td className="px-3 py-2">
-                        <input type="number" min="0" step="0.01" value={line.debitAmount ? (line.debitAmount / 100).toFixed(2) : ''} onChange={(e) => updateLine(idx, 'debitAmount', Math.round(parseFloat(e.target.value || '0') * 100))} className="input-field !py-1 text-right" placeholder="0.00" />
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={debitTexts[idx]}
+                          onChange={(e) => handleDebitChange(idx, e.target.value)}
+                          onBlur={() => handleDebitBlur(idx)}
+                          className="input-field !py-1 text-right font-mono"
+                          placeholder="0.00"
+                        />
                       </td>
                       <td className="px-3 py-2">
-                        <input type="number" min="0" step="0.01" value={line.creditAmount ? (line.creditAmount / 100).toFixed(2) : ''} onChange={(e) => updateLine(idx, 'creditAmount', Math.round(parseFloat(e.target.value || '0') * 100))} className="input-field !py-1 text-right" placeholder="0.00" />
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={creditTexts[idx]}
+                          onChange={(e) => handleCreditChange(idx, e.target.value)}
+                          onBlur={() => handleCreditBlur(idx)}
+                          className="input-field !py-1 text-right font-mono"
+                          placeholder="0.00"
+                        />
                       </td>
                       <td className="px-3 py-2 text-center">
                         {lines.length > 2 && (
@@ -272,8 +337,8 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
                 <tfoot className="table-header border-t-2 border-slate-200 dark:border-slate-700">
                   <tr>
                     <td className="px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300">Totals</td>
-                    <td className="px-3 py-2 text-right text-sm font-mono font-medium text-slate-900 dark:text-white">${(totalDebit / 100).toFixed(2)}</td>
-                    <td className="px-3 py-2 text-right text-sm font-mono font-medium text-slate-900 dark:text-white">${(totalCredit / 100).toFixed(2)}</td>
+                    <td className="px-3 py-2 text-right text-sm font-mono font-medium text-slate-900 dark:text-white">{formatCurrency(totalDebit, currency)}</td>
+                    <td className="px-3 py-2 text-right text-sm font-mono font-medium text-slate-900 dark:text-white">{formatCurrency(totalCredit, currency)}</td>
                     <td className="px-3 py-2 text-center">
                       {isBalanced ? (
                         <CheckCircle className="h-4 w-4 text-success-500" />

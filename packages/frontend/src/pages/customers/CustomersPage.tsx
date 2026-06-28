@@ -2,11 +2,14 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { Plus, Search, X } from 'lucide-react';
+import { formatCurrency } from '../../lib/currency';
+import { useCurrencyStore } from '../../stores/currency';
 
 export function CustomersPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState('');
   const queryClient = useQueryClient();
+  const { currency } = useCurrencyStore();
 
   const { data, isLoading } = useQuery({
     queryKey: ['customers', search],
@@ -17,7 +20,7 @@ export function CustomersPage() {
     },
   });
 
-  const formatCurrency = (cents: number) => `Rp ${(cents / 100).toLocaleString('id-ID')}`;
+  const fc = (cents: number) => formatCurrency(cents, currency);
 
   return (
     <div className="space-y-6">
@@ -68,8 +71,8 @@ export function CustomersPage() {
                   <td className="px-6 py-3 text-sm font-medium text-slate-900 dark:text-white">{c.name}</td>
                   <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-300">{c.email || '-'}</td>
                   <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-300">{c.phone || '-'}</td>
-                  <td className="px-6 py-3 text-sm text-right font-mono text-slate-900 dark:text-white">{formatCurrency(c.creditLimit)}</td>
-                  <td className="px-6 py-3 text-sm text-right font-mono text-slate-900 dark:text-white">{formatCurrency(c.balance)}</td>
+                  <td className="px-6 py-3 text-sm text-right font-mono text-slate-900 dark:text-white">{fc(c.creditLimit)}</td>
+                  <td className="px-6 py-3 text-sm text-right font-mono text-slate-900 dark:text-white">{fc(c.balance)}</td>
                   <td className="px-6 py-3 text-center">
                     <span className={`badge ${c.isActive ? 'bg-success-100 dark:bg-success-900/50 text-success-700 dark:text-success-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
                       {c.isActive ? 'Active' : 'Inactive'}

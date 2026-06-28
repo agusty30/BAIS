@@ -44,20 +44,31 @@ async function seed() {
     });
   }
 
-  // Create fiscal period (check if exists first)
-  const existingPeriods = await db.select({ id: schema.fiscalPeriods.id })
-    .from(schema.fiscalPeriods)
-    .where(eq(schema.fiscalPeriods.name, 'FY 2026 - Q1'))
-    .limit(1);
+  // Create fiscal periods (Q1-Q4 for 2025 and 2026)
+  const quarters = [
+    { q: 1, start: '01-01', end: '03-31' },
+    { q: 2, start: '04-01', end: '06-30' },
+    { q: 3, start: '07-01', end: '09-30' },
+    { q: 4, start: '10-01', end: '12-31' },
+  ];
 
-  if (existingPeriods.length === 0) {
-    await db.insert(schema.fiscalPeriods).values({
-      name: 'FY 2026 - Q1',
-      startDate: new Date('2026-01-01'),
-      endDate: new Date('2026-03-31'),
-      status: 'open',
-      year: 2026,
-    });
+  for (const year of [2025, 2026]) {
+    for (const { q, start, end } of quarters) {
+      const periodName = `FY ${year} - Q${q}`;
+      const [existing] = await db.select({ id: schema.fiscalPeriods.id })
+        .from(schema.fiscalPeriods)
+        .where(eq(schema.fiscalPeriods.name, periodName))
+        .limit(1);
+      if (!existing) {
+        await db.insert(schema.fiscalPeriods).values({
+          name: periodName,
+          startDate: new Date(`${year}-${start}`),
+          endDate: new Date(`${year}-${end}`),
+          status: year < 2026 ? 'closed' : 'open',
+          year,
+        });
+      }
+    }
   }
 
   // Seed Chart of Accounts
