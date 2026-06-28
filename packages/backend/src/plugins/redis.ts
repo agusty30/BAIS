@@ -16,24 +16,34 @@ declare module 'fastify' {
 async function redisPlugin(app: FastifyInstance) {
   const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
+  const noopRedis = {
+    get: async () => null,
+    set: async () => 'OK',
+    del: async () => 0,
+    quit: async () => 'OK',
+    ping: async () => { throw new Error('Redis unavailable'); },
+    status: 'end',
+    on: () => noopRedis,
+  } as unknown as Redis;
+
   let redis: Redis;
   try {
     redis = new Redis(redisUrl, {
       maxRetriesPerRequest: 3,
-      retryStrategy: (times) => Math.min(times * 200, 2000),
+      retryStrategy: (times) => {
+        if (times > 3) return null;
+        return Math.min(times * 200, 2000);
+      },
       lazyConnect: true,
+      enableOfflineQueue: false,
+    });
+    redis.on('error', (err) => {
+      app.log.debug(`Redis error: ${err.message}`);
     });
     await redis.connect();
     app.log.info('Redis connected');
-  } catch (err) {
+  } catch {
     app.log.warn('Redis unavailable — running without cache');
-    const noopRedis = {
-      get: async () => null,
-      set: async () => 'OK',
-      del: async () => 0,
-      quit: async () => 'OK',
-      status: 'end',
-    } as unknown as Redis;
     redis = noopRedis;
   }
 
