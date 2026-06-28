@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { Plus, Search, X } from 'lucide-react';
-import { formatCurrency } from '../../lib/currency';
+import { formatCurrency, parseCurrencyInput } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
+import { useToastStore } from '../../stores/toast';
 
 export function CustomersPage() {
   const [showCreate, setShowCreate] = useState(false);
@@ -92,6 +93,9 @@ export function CustomersPage() {
 
 function CreateCustomerModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
+  const { currency } = useCurrencyStore();
+  const addToast = useToastStore((s) => s.addToast);
+  const [creditLimitText, setCreditLimitText] = useState('');
   const [form, setForm] = useState({ name: '', email: '', phone: '', address: '', taxId: '', creditLimit: 0 });
   const [error, setError] = useState('');
 
@@ -99,15 +103,21 @@ function CreateCustomerModal({ onClose }: { onClose: () => void }) {
     mutationFn: (data: typeof form) => api.post('/customers', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
+      addToast('Customer added');
       onClose();
     },
     onError: (err: any) => setError(err.response?.data?.message || 'Failed to create customer'),
   });
 
+  const handleCreditLimitChange = (text: string) => {
+    setCreditLimitText(text);
+    setForm(prev => ({ ...prev, creditLimit: parseCurrencyInput(text, currency) }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) { setError('Name is required'); return; }
-    mutation.mutate(form);
+    mutation.mutate({ ...form, creditLimit: parseCurrencyInput(creditLimitText, currency) });
   };
 
   return (
@@ -145,8 +155,8 @@ function CreateCustomerModal({ onClose }: { onClose: () => void }) {
               <input type="text" value={form.taxId} onChange={(e) => setForm({ ...form, taxId: e.target.value })} className="input-field" />
             </div>
             <div>
-              <label className="label">Credit Limit</label>
-              <input type="number" value={form.creditLimit} onChange={(e) => setForm({ ...form, creditLimit: Number(e.target.value) })} className="input-field" min={0} />
+              <label className="label">Credit Limit ({currency})</label>
+              <input type="text" inputMode="decimal" value={creditLimitText} onChange={(e) => handleCreditLimitChange(e.target.value)} className="input-field" placeholder={currency === 'IDR' ? '0' : '0.00'} />
             </div>
           </div>
           <div className="flex gap-3 pt-2">

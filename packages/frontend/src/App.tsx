@@ -19,6 +19,7 @@ import { InvoicesPage } from './pages/invoices/InvoicesPage';
 import { PaymentsPage } from './pages/payments/PaymentsPage';
 import { BudgetPage } from './pages/budget/BudgetPage';
 import { BlockchainExplorerPage } from './pages/blockchain/BlockchainExplorerPage';
+import { ToastContainer } from './components/Toast';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -28,6 +29,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
+    <>
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route
@@ -59,5 +61,7 @@ export default function App() {
         }
       />
     </Routes>
+    <ToastContainer />
+    </>
   );
 }

@@ -5,6 +5,7 @@ import { CreditCard, X } from 'lucide-react';
 import { formatCurrency, parseCurrencyInput } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
 import { CurrencySelector } from '../../components/CurrencySelector';
+import { useToastStore } from '../../stores/toast';
 
 const methodLabels: Record<string, string> = {
   cash: 'Cash',
@@ -84,6 +85,7 @@ export function PaymentsPage() {
 function RecordPaymentModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
   const { currency } = useCurrencyStore();
+  const addToast = useToastStore((s) => s.addToast);
   const [amountText, setAmountText] = useState('');
   const [form, setForm] = useState({
     invoiceId: '',
@@ -107,6 +109,7 @@ function RecordPaymentModal({ onClose }: { onClose: () => void }) {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['invoices-summary'] });
+      addToast('Payment recorded');
       onClose();
     },
     onError: (err: any) => setError(err.response?.data?.message || 'Failed to record payment'),

@@ -4,6 +4,7 @@ import { api } from '../../api/client';
 import { Plus, Search, X } from 'lucide-react';
 import { formatCurrency } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
+import { useToastStore } from '../../stores/toast';
 
 export function VendorsPage() {
   const [showCreate, setShowCreate] = useState(false);
@@ -91,6 +92,7 @@ export function VendorsPage() {
 
 function CreateVendorModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
+  const addToast = useToastStore((s) => s.addToast);
   const [form, setForm] = useState({ name: '', email: '', phone: '', address: '', taxId: '', paymentTerms: 30 });
   const [error, setError] = useState('');
 
@@ -98,6 +100,7 @@ function CreateVendorModal({ onClose }: { onClose: () => void }) {
     mutationFn: (data: typeof form) => api.post('/vendors', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendors'] });
+      addToast('Vendor added');
       onClose();
     },
     onError: (err: any) => setError(err.response?.data?.message || 'Failed to create vendor'),

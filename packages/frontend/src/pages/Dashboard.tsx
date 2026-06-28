@@ -4,12 +4,18 @@ import { useAuthStore } from '../stores/auth';
 import { useCurrencyStore } from '../stores/currency';
 import { formatCurrency, formatCurrencyShort } from '../lib/currency';
 import { CurrencySelector } from '../components/CurrencySelector';
+import { Link } from 'react-router-dom';
 import {
   BarChart3,
   FileText,
   CheckSquare,
   Shield,
   Blocks,
+  Plus,
+  Receipt,
+  CreditCard,
+  CheckCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -112,6 +118,51 @@ export function Dashboard() {
         ))}
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Link to="/journal" className="card p-4 flex items-center gap-3 hover:border-primary-300 dark:hover:border-primary-700 transition-colors group">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900/50 group-hover:bg-primary-200 dark:group-hover:bg-primary-900/80 transition-colors">
+            <Plus className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">New Journal Entry</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Create financial entry</p>
+          </div>
+        </Link>
+        <Link to="/invoices" className="card p-4 flex items-center gap-3 hover:border-primary-300 dark:hover:border-primary-700 transition-colors group">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50 group-hover:bg-amber-200 dark:group-hover:bg-amber-900/80 transition-colors">
+            <Receipt className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">New Invoice</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Create AR/AP invoice</p>
+          </div>
+        </Link>
+        <Link to="/payments" className="card p-4 flex items-center gap-3 hover:border-primary-300 dark:hover:border-primary-700 transition-colors group">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success-100 dark:bg-success-900/50 group-hover:bg-success-200 dark:group-hover:bg-success-900/80 transition-colors">
+            <CreditCard className="h-5 w-5 text-success-600 dark:text-success-400" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">Record Payment</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Log a payment</p>
+          </div>
+        </Link>
+        <div className="card p-4 flex items-center gap-3">
+          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${verifyData?.chainValid !== false ? 'bg-success-100 dark:bg-success-900/50' : 'bg-red-100 dark:bg-red-900/50'}`}>
+            {verifyData?.chainValid !== false ? (
+              <CheckCircle className="h-5 w-5 text-success-600 dark:text-success-400" />
+            ) : (
+              <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+            )}
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">Blockchain Health</p>
+            <p className={`text-xs font-medium ${verifyData?.chainValid !== false ? 'text-success-600 dark:text-success-400' : 'text-red-600 dark:text-red-400'}`}>
+              {verifyData?.chainValid !== false ? 'Chain Verified' : 'Integrity Issue'}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="card p-6">
           <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-white font-display">Revenue vs Expenses</h2>
@@ -129,8 +180,10 @@ export function Dashboard() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex h-[250px] items-center justify-center text-sm text-slate-400">
-              No posted transactions yet
+            <div className="flex h-[250px] flex-col items-center justify-center text-sm text-slate-400">
+              <FileText className="h-8 w-8 mb-2 text-slate-300 dark:text-slate-600" />
+              <p>No posted transactions yet</p>
+              <Link to="/journal" className="mt-2 text-xs text-primary-600 dark:text-primary-400 hover:underline">Create a journal entry</Link>
             </div>
           )}
         </div>
@@ -168,8 +221,10 @@ export function Dashboard() {
               </div>
             </div>
           ) : (
-            <div className="flex h-[250px] items-center justify-center text-sm text-slate-400">
-              No accounts yet
+            <div className="flex h-[250px] flex-col items-center justify-center text-sm text-slate-400">
+              <BarChart3 className="h-8 w-8 mb-2 text-slate-300 dark:text-slate-600" />
+              <p>No accounts yet</p>
+              <Link to="/accounts" className="mt-2 text-xs text-primary-600 dark:text-primary-400 hover:underline">Set up chart of accounts</Link>
             </div>
           )}
         </div>

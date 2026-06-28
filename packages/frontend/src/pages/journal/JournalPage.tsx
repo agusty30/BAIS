@@ -5,6 +5,7 @@ import { FileText, Plus, X, Send, CheckCircle, Trash2 } from 'lucide-react';
 import { formatCurrency, parseCurrencyInput, formatCurrencyInput } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
 import { CurrencySelector } from '../../components/CurrencySelector';
+import { useToastStore } from '../../stores/toast';
 
 export function JournalPage() {
   const [showCreate, setShowCreate] = useState(false);
@@ -133,6 +134,7 @@ interface JournalLine {
 function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
   const { currency } = useCurrencyStore();
+  const addToast = useToastStore((s) => s.addToast);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
@@ -160,6 +162,7 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
     mutationFn: (payload: any) => api.post('/journal-entries', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
+      addToast('Journal entry created');
       onClose();
     },
     onError: (err: any) => {

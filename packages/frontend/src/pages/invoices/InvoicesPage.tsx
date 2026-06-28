@@ -5,6 +5,7 @@ import { Plus, FileText, X } from 'lucide-react';
 import { formatCurrency, parseCurrencyInput } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
 import { CurrencySelector } from '../../components/CurrencySelector';
+import { useToastStore } from '../../stores/toast';
 
 const statusColors: Record<string, string> = {
   draft: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400',
@@ -149,6 +150,7 @@ export function InvoicesPage() {
 function CreateInvoiceModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
   const { currency } = useCurrencyStore();
+  const addToast = useToastStore((s) => s.addToast);
   const [amountText, setAmountText] = useState('');
   const [form, setForm] = useState({
     type: 'receivable' as 'receivable' | 'payable',
@@ -176,6 +178,7 @@ function CreateInvoiceModal({ onClose }: { onClose: () => void }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['invoices-summary'] });
+      addToast('Invoice created');
       onClose();
     },
     onError: (err: any) => setError(err.response?.data?.message || 'Failed to create invoice'),

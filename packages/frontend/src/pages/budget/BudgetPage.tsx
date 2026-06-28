@@ -5,6 +5,7 @@ import { Plus, X, TrendingUp, TrendingDown } from 'lucide-react';
 import { formatCurrency, parseCurrencyInput } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
 import { CurrencySelector } from '../../components/CurrencySelector';
+import { useToastStore } from '../../stores/toast';
 
 export function BudgetPage() {
   const [showCreate, setShowCreate] = useState(false);
@@ -150,6 +151,7 @@ export function BudgetPage() {
 function SetBudgetModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
   const { currency } = useCurrencyStore();
+  const addToast = useToastStore((s) => s.addToast);
   const [amountText, setAmountText] = useState('');
   const [form, setForm] = useState({ accountId: '', fiscalPeriodId: '', budgetAmount: 0, notes: '' });
   const [error, setError] = useState('');
@@ -169,6 +171,7 @@ function SetBudgetModal({ onClose }: { onClose: () => void }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budget'] });
       queryClient.invalidateQueries({ queryKey: ['budget-summary'] });
+      addToast('Budget set successfully');
       onClose();
     },
     onError: (err: any) => setError(err.response?.data?.message || 'Failed to set budget'),
