@@ -142,10 +142,9 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
   });
   const [lines, setLines] = useState<JournalLine[]>([
     { accountId: '', debitAmount: 0, creditAmount: 0, description: '' },
-    { accountId: '', debitAmount: 0, creditAmount: 0, description: '' },
   ]);
-  const [debitTexts, setDebitTexts] = useState<string[]>(['', '']);
-  const [creditTexts, setCreditTexts] = useState<string[]>(['', '']);
+  const [debitTexts, setDebitTexts] = useState<string[]>(['']);
+  const [creditTexts, setCreditTexts] = useState<string[]>(['']);
 
   const { data: accounts } = useQuery({
     queryKey: ['accounts-flat'],
@@ -178,7 +177,7 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
     setCreditTexts([...creditTexts, '']);
   };
   const removeLine = (idx: number) => {
-    if (lines.length <= 2) return;
+    if (lines.length <= 1) return;
     setLines(lines.filter((_, i) => i !== idx));
     setDebitTexts(debitTexts.filter((_, i) => i !== idx));
     setCreditTexts(creditTexts.filter((_, i) => i !== idx));
@@ -346,7 +345,7 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
                         />
                       </td>
                       <td className="px-3 py-2 text-center">
-                        {lines.length > 2 && (
+                        {lines.length > 1 && (
                           <button type="button" onClick={() => removeLine(idx)} className="text-slate-400 hover:text-red-500 transition-colors">
                             <Trash2 className="h-4 w-4" />
                           </button>
