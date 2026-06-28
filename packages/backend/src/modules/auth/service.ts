@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { eq } from 'drizzle-orm';
-import bcrypt from 'bcryptjs';
+import { hash, verify } from '@node-rs/argon2';
 import { v4 as uuid } from 'uuid';
 import { users, refreshTokens } from '../../db/schema.js';
 import { UnauthorizedError, NotFoundError, ConflictError } from '../../plugins/error-handler.js';
@@ -20,7 +20,7 @@ export class AuthService {
       throw new UnauthorizedError('Invalid email or password');
     }
 
-    const validPassword = await bcrypt.compare(password, user.passwordHash);
+    const validPassword = await verify(user.passwordHash, password);
     if (!validPassword) {
       throw new UnauthorizedError('Invalid email or password');
     }
@@ -106,10 +106,10 @@ export class AuthService {
 
     if (!user) throw new NotFoundError('User');
 
-    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    const valid = await verify(user.passwordHash, currentPassword);
     if (!valid) throw new UnauthorizedError('Current password is incorrect');
 
-    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const passwordHash = await hash(newPassword);
     await this.app.db
       .update(users)
       .set({ passwordHash, updatedAt: new Date() })
@@ -145,7 +145,7 @@ export class AuthService {
       throw new ConflictError('Email already registered');
     }
 
-    const passwordHash = await bcrypt.hash(input.password, 10);
+    const passwordHash = await hash(input.password);
     const [user] = await this.app.db
       .insert(users)
       .values({

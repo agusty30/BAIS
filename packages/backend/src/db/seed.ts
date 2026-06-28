@@ -4,7 +4,7 @@ config();
 import pg from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { eq, sql } from 'drizzle-orm';
-import bcrypt from 'bcryptjs';
+import { hash } from '@node-rs/argon2';
 import * as schema from './schema.js';
 import { DEFAULT_CHART_OF_ACCOUNTS } from '@bais/shared';
 
@@ -15,7 +15,7 @@ async function seed() {
   console.log('Seeding database...');
 
   // Create admin user
-  const passwordHash = await bcrypt.hash('admin123!@#', 10);
+  const passwordHash = await hash('admin123!@#');
   await db.insert(schema.users).values({
     email: 'admin@bais.local',
     passwordHash,
@@ -33,7 +33,7 @@ async function seed() {
   for (const user of sampleUsers) {
     await db.insert(schema.users).values({
       ...user,
-      passwordHash: await bcrypt.hash('password123!', 10),
+      passwordHash: await hash('password123!'),
     }).onConflictDoNothing({ target: schema.users.email });
   }
 

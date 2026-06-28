@@ -61,3 +61,46 @@ export const dateRangeSchema = z.object({
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
+
+export const createCustomerSchema = z.object({
+  name: z.string().min(1).max(255),
+  email: z.string().email().optional().nullable(),
+  phone: z.string().max(50).optional().nullable(),
+  address: z.string().max(500).optional().nullable(),
+  taxId: z.string().max(50).optional().nullable(),
+  creditLimit: z.number().int().min(0).default(0),
+});
+
+export const createVendorSchema = z.object({
+  name: z.string().min(1).max(255),
+  email: z.string().email().optional().nullable(),
+  phone: z.string().max(50).optional().nullable(),
+  address: z.string().max(500).optional().nullable(),
+  taxId: z.string().max(50).optional().nullable(),
+  paymentTerms: z.number().int().min(0).max(365).default(30),
+});
+
+export const createInvoiceSchema = z.object({
+  type: z.enum(['receivable', 'payable']),
+  customerId: z.string().uuid().optional().nullable(),
+  vendorId: z.string().uuid().optional().nullable(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  totalAmount: z.number().int().min(1),
+  description: z.string().min(1).max(1000),
+});
+
+export const recordPaymentSchema = z.object({
+  invoiceId: z.string().uuid(),
+  amount: z.number().int().min(1),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  method: z.enum(['cash', 'bank_transfer', 'check', 'credit_card', 'other']),
+  reference: z.string().max(255).optional(),
+});
+
+export const createBudgetItemSchema = z.object({
+  accountId: z.string().uuid(),
+  fiscalPeriodId: z.string().uuid(),
+  budgetAmount: z.number().int().min(0),
+  notes: z.string().max(500).optional().nullable(),
+});

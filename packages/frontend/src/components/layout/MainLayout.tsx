@@ -19,23 +19,64 @@ import {
   Settings,
   Sun,
   Moon,
+  BookOpenCheck,
+  Receipt,
+  CreditCard,
+  UserCircle,
+  Store,
+  Wallet,
+  ChevronDown,
 } from 'lucide-react';
 import { NotificationBell } from '../NotificationBell';
 
-const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Chart of Accounts', href: '/accounts', icon: BookOpen },
-  { name: 'Journal Entries', href: '/journal', icon: FileText },
-  { name: 'Approvals', href: '/approvals', icon: CheckSquare },
-  { name: 'Reports', href: '/reports', icon: BarChart3 },
-  { name: 'Audit Trail', href: '/audit', icon: Shield },
-  { name: 'COSO Framework', href: '/coso', icon: Target },
-  { name: 'PIECES Analysis', href: '/pieces', icon: Activity },
+interface NavSection {
+  label: string;
+  items: { name: string; href: string; icon: any }[];
+}
+
+const navSections: NavSection[] = [
+  {
+    label: 'Overview',
+    items: [
+      { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'Financial',
+    items: [
+      { name: 'Chart of Accounts', href: '/accounts', icon: BookOpen },
+      { name: 'General Ledger', href: '/general-ledger', icon: BookOpenCheck },
+      { name: 'Journal Entries', href: '/journal', icon: FileText },
+      { name: 'Approvals', href: '/approvals', icon: CheckSquare },
+      { name: 'Budget', href: '/budget', icon: Wallet },
+    ],
+  },
+  {
+    label: 'Operations',
+    items: [
+      { name: 'Invoices', href: '/invoices', icon: Receipt },
+      { name: 'Payments', href: '/payments', icon: CreditCard },
+      { name: 'Customers', href: '/customers', icon: UserCircle },
+      { name: 'Vendors', href: '/vendors', icon: Store },
+    ],
+  },
+  {
+    label: 'Compliance',
+    items: [
+      { name: 'Reports', href: '/reports', icon: BarChart3 },
+      { name: 'Audit Trail', href: '/audit', icon: Shield },
+      { name: 'COSO Framework', href: '/coso', icon: Target },
+      { name: 'PIECES Analysis', href: '/pieces', icon: Activity },
+    ],
+  },
 ];
 
-const adminNavigation = [
-  { name: 'User Management', href: '/users', icon: Users },
-];
+const adminSection: NavSection = {
+  label: 'Admin',
+  items: [
+    { name: 'User Management', href: '/users', icon: Users },
+  ],
+};
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -44,9 +85,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
 
-  const allNavItems = user?.role === 'admin'
-    ? [...navigation, ...adminNavigation]
-    : navigation;
+  const sections = user?.role === 'admin'
+    ? [...navSections, adminSection]
+    : navSections;
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
@@ -67,24 +108,33 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto px-3 py-4">
-            {allNavItems.map((item) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`mb-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150 ${
-                    isActive
-                      ? 'bg-success-500/15 text-success-400'
-                      : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                  }`}
-                >
-                  <item.icon className={`h-5 w-5 ${isActive ? 'text-success-400' : ''}`} />
-                  {item.name}
-                </Link>
-              );
-            })}
+            {sections.map((section) => (
+              <div key={section.label} className="mb-4">
+                {section.label !== 'Overview' && (
+                  <div className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                    {section.label}
+                  </div>
+                )}
+                {section.items.map((item) => {
+                  const isActive = location.pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`mb-0.5 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ${
+                        isActive
+                          ? 'bg-success-500/15 text-success-400'
+                          : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      <item.icon className={`h-4 w-4 ${isActive ? 'text-success-400' : ''}`} />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
 
           {/* User info */}

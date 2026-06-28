@@ -7,7 +7,14 @@ import { requirePermission } from '../../plugins/auth.js';
 export async function authRoutes(app: FastifyInstance) {
   const authService = new AuthService(app);
 
-  app.post('/login', async (request, reply) => {
+  app.post('/login', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '1 minute',
+      },
+    },
+  }, async (request, reply) => {
     const body = loginSchema.parse(request.body);
     const tokens = await authService.login(body.email, body.password);
     return reply.send(tokens);

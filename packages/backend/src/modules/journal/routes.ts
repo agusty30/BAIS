@@ -106,47 +106,52 @@ export async function journalRoutes(app: FastifyInstance) {
     const lines = await app.db.select().from(journalEntryLines)
       .where(eq(journalEntryLines.journalEntryId, id));
 
-    // Record on blockchain
-    const txId = await app.blockchain.submitTransaction(
-      'ledger',
-      'recordJournalEntry',
-      JSON.stringify({ id: entry.id, entryNumber: entry.entryNumber, date: entry.date, lines, totalAmount: entry.totalAmount }),
-    );
+    // Wrap posting in a transaction for atomicity
+    const posted = await app.db.transaction(async (tx) => {
+      // Record on blockchain
+      const txId = await app.blockchain.submitTransaction(
+        'ledger',
+        'recordJournalEntry',
+        JSON.stringify({ id: entry.id, entryNumber: entry.entryNumber, date: entry.date, lines, totalAmount: entry.totalAmount }),
+      );
 
-    // Update entry status and blockchain reference
-    const [posted] = await app.db
-      .update(journalEntries)
-      .set({ status: 'posted', blockchainTxId: txId, updatedAt: new Date() })
-      .where(eq(journalEntries.id, id))
-      .returning();
+      // Update entry status and blockchain reference
+      const [result] = await tx
+        .update(journalEntries)
+        .set({ status: 'posted', blockchainTxId: txId, updatedAt: new Date() })
+        .where(eq(journalEntries.id, id))
+        .returning();
 
-    // Update account balances
-    for (const line of lines) {
-      const [existing] = await app.db.select().from(accountBalances)
-        .where(and(
-          eq(accountBalances.accountId, line.accountId),
-          eq(accountBalances.fiscalPeriodId, entry.fiscalPeriodId),
-        )).limit(1);
+      // Update account balances
+      for (const line of lines) {
+        const [existing] = await tx.select().from(accountBalances)
+          .where(and(
+            eq(accountBalances.accountId, line.accountId),
+            eq(accountBalances.fiscalPeriodId, entry.fiscalPeriodId),
+          )).limit(1);
 
-      if (existing) {
-        await app.db.update(accountBalances)
-          .set({
-            debitTotal: existing.debitTotal + line.debitAmount,
-            creditTotal: existing.creditTotal + line.creditAmount,
-            balance: (existing.debitTotal + line.debitAmount) - (existing.creditTotal + line.creditAmount),
-            lastUpdatedAt: new Date(),
-          })
-          .where(eq(accountBalances.id, existing.id));
-      } else {
-        await app.db.insert(accountBalances).values({
-          accountId: line.accountId,
-          fiscalPeriodId: entry.fiscalPeriodId,
-          debitTotal: line.debitAmount,
-          creditTotal: line.creditAmount,
-          balance: line.debitAmount - line.creditAmount,
-        });
+        if (existing) {
+          await tx.update(accountBalances)
+            .set({
+              debitTotal: existing.debitTotal + line.debitAmount,
+              creditTotal: existing.creditTotal + line.creditAmount,
+              balance: (existing.debitTotal + line.debitAmount) - (existing.creditTotal + line.creditAmount),
+              lastUpdatedAt: new Date(),
+            })
+            .where(eq(accountBalances.id, existing.id));
+        } else {
+          await tx.insert(accountBalances).values({
+            accountId: line.accountId,
+            fiscalPeriodId: entry.fiscalPeriodId,
+            debitTotal: line.debitAmount,
+            creditTotal: line.creditAmount,
+            balance: line.debitAmount - line.creditAmount,
+          });
+        }
       }
-    }
+
+      return result;
+    });
 
     return posted;
   });

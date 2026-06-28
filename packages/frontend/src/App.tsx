@@ -12,6 +12,12 @@ import { COSOPage } from './pages/coso/COSOPage';
 import { PiecesPage } from './pages/pieces/PiecesPage';
 import { UsersPage } from './pages/users/UsersPage';
 import { SettingsPage } from './pages/settings/SettingsPage';
+import { GeneralLedgerPage } from './pages/general-ledger/GeneralLedgerPage';
+import { CustomersPage } from './pages/customers/CustomersPage';
+import { VendorsPage } from './pages/vendors/VendorsPage';
+import { InvoicesPage } from './pages/invoices/InvoicesPage';
+import { PaymentsPage } from './pages/payments/PaymentsPage';
+import { BudgetPage } from './pages/budget/BudgetPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -31,8 +37,14 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/accounts" element={<AccountsPage />} />
+                <Route path="/general-ledger" element={<GeneralLedgerPage />} />
                 <Route path="/journal" element={<JournalPage />} />
                 <Route path="/approvals" element={<ApprovalsPage />} />
+                <Route path="/invoices" element={<InvoicesPage />} />
+                <Route path="/payments" element={<PaymentsPage />} />
+                <Route path="/customers" element={<CustomersPage />} />
+                <Route path="/vendors" element={<VendorsPage />} />
+                <Route path="/budget" element={<BudgetPage />} />
                 <Route path="/reports" element={<ReportsPage />} />
                 <Route path="/audit" element={<AuditPage />} />
                 <Route path="/coso" element={<COSOPage />} />

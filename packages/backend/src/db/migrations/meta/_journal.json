@@ -8,6 +8,13 @@
       "when": 1782325870666,
       "tag": "0000_silent_firestar",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782633362603,
+      "tag": "0001_modern_the_liberteens",
+      "breakpoints": true
     }
   ]
 }

@@ -27,8 +27,13 @@ declare module '@fastify/jwt' {
 }
 
 async function auth(app: FastifyInstance) {
+  const secret = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? '' : 'dev-secret-change-in-prod');
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required in production');
+  }
+
   await app.register(fjwt, {
-    secret: process.env.JWT_SECRET || 'dev-secret-change-in-prod',
+    secret,
     sign: { expiresIn: process.env.JWT_EXPIRES_IN || '15m' },
   });
 

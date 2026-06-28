@@ -44,6 +44,20 @@ export enum Permission {
   COSO_EVALUATE = 'coso:evaluate',
   PIECES_VIEW = 'pieces:view',
   PIECES_MANAGE = 'pieces:manage',
+
+  // Extended Accounting
+  CUSTOMERS_READ = 'customers:read',
+  CUSTOMERS_MANAGE = 'customers:manage',
+  VENDORS_READ = 'vendors:read',
+  VENDORS_MANAGE = 'vendors:manage',
+  INVOICES_READ = 'invoices:read',
+  INVOICES_MANAGE = 'invoices:manage',
+  PAYMENTS_READ = 'payments:read',
+  PAYMENTS_MANAGE = 'payments:manage',
+  BUDGET_READ = 'budget:read',
+  BUDGET_MANAGE = 'budget:manage',
+  LEDGER_READ = 'ledger:read',
+  SETTINGS_MANAGE = 'settings:manage',
 }
 
 export interface User {
