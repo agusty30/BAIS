@@ -14,14 +14,17 @@ async function seed() {
 
   console.log('Seeding database...');
 
-  // Create admin user
-  const passwordHash = await hash('admin123!@#');
+  // Create admin user (upsert to rehash password on algorithm change)
+  const adminHash = await hash('admin123!@#');
   await db.insert(schema.users).values({
     email: 'admin@bais.local',
-    passwordHash,
+    passwordHash: adminHash,
     fullName: 'System Administrator',
     role: 'admin',
-  }).onConflictDoNothing({ target: schema.users.email });
+  }).onConflictDoUpdate({
+    target: schema.users.email,
+    set: { passwordHash: adminHash },
+  });
 
   // Create sample users
   const sampleUsers = [
@@ -30,11 +33,15 @@ async function seed() {
     { email: 'auditor@bais.local', fullName: 'Carol Auditor', role: 'auditor' as const },
   ];
 
+  const userHash = await hash('password123!');
   for (const user of sampleUsers) {
     await db.insert(schema.users).values({
       ...user,
-      passwordHash: await hash('password123!'),
-    }).onConflictDoNothing({ target: schema.users.email });
+      passwordHash: userHash,
+    }).onConflictDoUpdate({
+      target: schema.users.email,
+      set: { passwordHash: userHash },
+    });
   }
 
   // Create fiscal period (check if exists first)
