@@ -191,31 +191,43 @@ export function Dashboard() {
         <div className="card p-6">
           <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-white font-display">Account Distribution</h2>
           {accountsByType.length > 0 ? (
-            <div className="flex items-center gap-6">
-              <ResponsiveContainer width="60%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={accountsByType}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={90}
-                    dataKey="value"
-                    label={({ name, value }) => `${name} (${value})`}
-                    labelLine={false}
-                  >
-                    {accountsByType.map((_, idx) => (
-                      <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-2">
+            <div className="flex flex-col items-center">
+              <div className="relative">
+                <ResponsiveContainer width={200} height={200}>
+                  <PieChart>
+                    <Pie
+                      data={accountsByType}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={3}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {accountsByType.map((_, idx) => (
+                        <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ backgroundColor: 'var(--tooltip-bg, #fff)', border: '1px solid var(--tooltip-border, #e2e8f0)', borderRadius: '8px', fontSize: '13px' }}
+                      formatter={(v: number, name: string) => [`${v} accounts`, name]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-2xl font-bold text-slate-900 dark:text-white font-display">
+                    {accountsByType.reduce((s, i) => s + i.value, 0)}
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Total</span>
+                </div>
+              </div>
+              <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1.5">
                 {accountsByType.map((item, idx) => (
-                  <div key={item.name} className="flex items-center gap-2 text-sm">
-                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }} />
+                  <div key={item.name} className="flex items-center gap-1.5 text-sm">
+                    <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }} />
                     <span className="text-slate-600 dark:text-slate-400">{item.name}</span>
-                    <span className="font-medium text-slate-900 dark:text-white">{item.value}</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{item.value}</span>
                   </div>
                 ))}
               </div>
