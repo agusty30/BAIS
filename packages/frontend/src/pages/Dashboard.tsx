@@ -19,10 +19,10 @@ import {
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell,
+  Cell,
 } from 'recharts';
 
-const PIE_COLORS = ['#1e3a8a', '#ef4444', '#8b5cf6', '#10b981', '#f97316'];
+const BAR_COLORS = ['#1e3a8a', '#ef4444', '#8b5cf6', '#10b981', '#f97316'];
 
 export function Dashboard() {
   const { user } = useAuthStore();
@@ -191,46 +191,30 @@ export function Dashboard() {
         <div className="card p-6">
           <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-white font-display">Account Distribution</h2>
           {accountsByType.length > 0 ? (
-            <div className="flex flex-col items-center">
-              <div className="relative">
-                <ResponsiveContainer width={200} height={200}>
-                  <PieChart>
-                    <Pie
-                      data={accountsByType}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={90}
-                      paddingAngle={3}
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {accountsByType.map((_, idx) => (
-                        <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{ backgroundColor: 'var(--tooltip-bg, #fff)', border: '1px solid var(--tooltip-border, #e2e8f0)', borderRadius: '8px', fontSize: '13px' }}
-                      formatter={(v: number, name: string) => [`${v} accounts`, name]}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-bold text-slate-900 dark:text-white font-display">
-                    {accountsByType.reduce((s, i) => s + i.value, 0)}
-                  </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">Total</span>
-                </div>
-              </div>
-              <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1.5">
-                {accountsByType.map((item, idx) => (
-                  <div key={item.name} className="flex items-center gap-1.5 text-sm">
-                    <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }} />
-                    <span className="text-slate-600 dark:text-slate-400">{item.name}</span>
-                    <span className="font-semibold text-slate-900 dark:text-white">{item.value}</span>
-                  </div>
-                ))}
-              </div>
+            <div className="flex flex-col justify-center h-[250px]">
+              <ResponsiveContainer width="100%" height={accountsByType.length * 44 + 20}>
+                <BarChart data={accountsByType} layout="vertical" margin={{ left: 0, right: 30, top: 5, bottom: 5 }}>
+                  <XAxis type="number" hide />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={90}
+                    tick={{ fontSize: 13, fill: '#64748b' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: 'var(--tooltip-bg, #fff)', border: '1px solid var(--tooltip-border, #e2e8f0)', borderRadius: '8px', fontSize: '13px' }}
+                    formatter={(v: number) => [`${v} accounts`, 'Count']}
+                    cursor={{ fill: 'rgba(100,116,139,0.08)' }}
+                  />
+                  <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={24}>
+                    {accountsByType.map((_, idx) => (
+                      <Cell key={idx} fill={BAR_COLORS[idx % BAR_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           ) : (
             <div className="flex h-[250px] flex-col items-center justify-center text-sm text-slate-400">
