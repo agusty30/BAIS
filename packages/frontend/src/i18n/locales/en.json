@@ -155,7 +155,10 @@
     "newAmount": "New Amount",
     "newDueDate": "New Due Date",
     "reason": "Reason for Amendment",
-    "createAmendment": "Create Amendment"
+    "createAmendment": "Create Amendment",
+    "send": "Send Invoice",
+    "amend": "Amend",
+    "statusUpdated": "Invoice status updated"
   },
   "budget": {
     "title": "Budget Management",

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
-import { Plus, FileText, X, Pencil, Copy, Check } from 'lucide-react';
+import { Plus, FileText, X, Pencil, Copy, Check, Send } from 'lucide-react';
 import { formatCurrency, parseCurrencyInput } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
 import { CurrencySelector } from '../../components/CurrencySelector';
@@ -25,7 +25,20 @@ export function InvoicesPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const { currency } = useCurrencyStore();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const addToast = useToastStore((s) => s.addToast);
   const fc = (cents: number) => formatCurrency(cents, currency);
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      api.patch(`/invoices/${id}/status`, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices-summary'] });
+      addToast(t('invoices.statusUpdated'), 'success');
+    },
+    onError: (err: any) => addToast(err.response?.data?.message || 'Status update failed', 'error'),
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ['invoices', typeFilter, statusFilter],
@@ -146,12 +159,17 @@ export function InvoicesPage() {
                   <td className="px-6 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
                       {inv.status === 'draft' && (
-                        <button onClick={() => setEditingInvoice(inv)} className="rounded p-1.5 text-slate-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-950/30 transition-colors" title={t('common.edit')}>
-                          <Pencil className="h-4 w-4" />
-                        </button>
+                        <>
+                          <button onClick={() => setEditingInvoice(inv)} className="rounded p-1.5 text-slate-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-950/30 transition-colors" title={t('common.edit')}>
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => statusMutation.mutate({ id: inv.id, status: 'sent' })} className="rounded p-1.5 text-slate-400 hover:text-success-500 hover:bg-success-50 dark:hover:bg-success-950/30 transition-colors" title={t('invoices.send')}>
+                            <Send className="h-4 w-4" />
+                          </button>
+                        </>
                       )}
                       {inv.status !== 'draft' && inv.status !== 'cancelled' && (
-                        <button onClick={() => setAmendingInvoice(inv)} className="rounded p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors" title="Amend">
+                        <button onClick={() => setAmendingInvoice(inv)} className="rounded p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors" title={t('invoices.amend')}>
                           <Copy className="h-4 w-4" />
                         </button>
                       )}

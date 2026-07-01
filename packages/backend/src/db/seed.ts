@@ -113,7 +113,10 @@ async function seed() {
       description: roleDescriptions[roleName] || '',
       permissions: permissions as string[],
       isSystem: true,
-    }).onConflictDoNothing({ target: schema.roles.name });
+    }).onConflictDoUpdate({
+      target: schema.roles.name,
+      set: { permissions: permissions as string[], description: roleDescriptions[roleName] || '' },
+    });
   }
 
   // Seed default Indonesian tax rates

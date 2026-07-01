@@ -155,7 +155,10 @@
     "newAmount": "Jumlah Baru",
     "newDueDate": "Tanggal Jatuh Tempo Baru",
     "reason": "Alasan Amandemen",
-    "createAmendment": "Buat Amandemen"
+    "createAmendment": "Buat Amandemen",
+    "send": "Kirim Faktur",
+    "amend": "Amandemen",
+    "statusUpdated": "Status faktur berhasil diperbarui"
   },
   "budget": {
     "title": "Manajemen Anggaran",

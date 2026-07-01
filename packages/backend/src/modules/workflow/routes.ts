@@ -22,7 +22,7 @@ export async function workflowRoutes(app: FastifyInstance) {
         )).limit(1);
 
       const currentStep = steps[0];
-      if (currentStep && currentStep.requiredRole === request.user.role) {
+      if (currentStep && (currentStep.requiredRole === request.user.role || request.user.role === 'admin')) {
         const [entry] = await app.db.select().from(journalEntries)
           .where(eq(journalEntries.id, wf.journalEntryId)).limit(1);
         result.push({ workflow: wf, currentStep, journalEntry: entry });
