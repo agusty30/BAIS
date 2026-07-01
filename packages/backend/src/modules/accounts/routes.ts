@@ -5,6 +5,7 @@ import { Permission } from '@bais/shared';
 import { requirePermission } from '../../plugins/auth.js';
 import { createAccountSchema } from '@bais/shared';
 import { NotFoundError } from '../../plugins/error-handler.js';
+import { logAudit } from '../../lib/audit.js';
 
 export async function accountRoutes(app: FastifyInstance) {
   // List all accounts
@@ -62,6 +63,10 @@ export async function accountRoutes(app: FastifyInstance) {
       path,
     }).returning();
 
+    await logAudit(app, request, 'create', 'account', account.id, {
+      newValues: { code: account.code, name: account.name, type: account.type },
+    });
+
     return reply.status(201).send(account);
   });
 
@@ -72,13 +77,20 @@ export async function accountRoutes(app: FastifyInstance) {
     const { id } = request.params as { id: string };
     const body = request.body as { name?: string; isActive?: boolean };
 
+    const [existing] = await app.db.select().from(accounts).where(eq(accounts.id, id)).limit(1);
+    if (!existing) throw new NotFoundError('Account');
+
     const [account] = await app.db
       .update(accounts)
       .set({ ...body, updatedAt: new Date() })
       .where(eq(accounts.id, id))
       .returning();
 
-    if (!account) throw new NotFoundError('Account');
+    await logAudit(app, request, 'update', 'account', id, {
+      oldValues: { name: existing.name, isActive: existing.isActive },
+      newValues: { name: account.name, isActive: account.isActive },
+    });
+
     return account;
   });
 }

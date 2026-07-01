@@ -6,7 +6,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { eq, sql } from 'drizzle-orm';
 import { hash } from '@node-rs/argon2';
 import * as schema from './schema.js';
-import { DEFAULT_CHART_OF_ACCOUNTS } from '@bais/shared';
+import { DEFAULT_CHART_OF_ACCOUNTS, ROLE_PERMISSIONS, Permission } from '@bais/shared';
 
 async function seed() {
   const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
@@ -98,6 +98,23 @@ async function seed() {
   }
 
   await insertAccounts(DEFAULT_CHART_OF_ACCOUNTS);
+
+  // Seed default roles from ROLE_PERMISSIONS constant
+  const roleDescriptions: Record<string, string> = {
+    admin: 'Full system access',
+    accountant: 'Manage accounts, journal entries, and financial operations',
+    manager: 'Approve transactions and manage budgets',
+    auditor: 'View and verify all financial records',
+    viewer: 'Read-only access to financial data',
+  };
+  for (const [roleName, permissions] of Object.entries(ROLE_PERMISSIONS)) {
+    await db.insert(schema.roles).values({
+      name: roleName,
+      description: roleDescriptions[roleName] || '',
+      permissions: permissions as string[],
+      isSystem: true,
+    }).onConflictDoNothing({ target: schema.roles.name });
+  }
 
   // Create default workflow templates (check if any exist first)
   const existingTemplates = await db.select({ id: schema.workflowTemplates.id })

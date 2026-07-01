@@ -14,9 +14,11 @@
     "@bais/shared": "workspace:*",
     "@tanstack/react-query": "^5.60.0",
     "axios": "^1.7.0",
+    "i18next": "^26.3.4",
     "lucide-react": "^0.460.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
+    "react-i18next": "^17.0.8",
     "react-router-dom": "^6.28.0",
     "recharts": "^2.13.0",
     "zustand": "^5.0.0"

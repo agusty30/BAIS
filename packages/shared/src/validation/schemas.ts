@@ -13,7 +13,7 @@ export const createUserSchema = z.object({
 });
 
 export const createAccountSchema = z.object({
-  code: z.string().min(4).max(10).regex(/^\d+$/, 'Account code must be numeric'),
+  code: z.string().min(1).max(24).regex(/^[a-zA-Z0-9.\-]+$/, 'Account code must be alphanumeric (letters, digits, dots, hyphens)'),
   name: z.string().min(1).max(255),
   type: z.enum(['asset', 'liability', 'equity', 'revenue', 'expense']),
   parentId: z.string().uuid().nullable().optional(),
@@ -30,8 +30,8 @@ export const createJournalEntrySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   description: z.string().min(1).max(1000),
   reference: z.string().max(255).optional(),
-  fiscalPeriodId: z.string().uuid(),
-  lines: z.array(journalEntryLineSchema).min(2).refine(
+  fiscalPeriodId: z.string().uuid().optional(),
+  lines: z.array(journalEntryLineSchema).min(1).refine(
     (lines) => {
       const totalDebit = lines.reduce((sum, l) => sum + l.debitAmount, 0);
       const totalCredit = lines.reduce((sum, l) => sum + l.creditAmount, 0);
@@ -68,6 +68,7 @@ export const createCustomerSchema = z.object({
   phone: z.string().max(50).optional().nullable(),
   address: z.string().max(500).optional().nullable(),
   taxId: z.string().max(50).optional().nullable(),
+  category: z.string().max(50).optional().nullable(),
   creditLimit: z.number().int().min(0).default(0),
 });
 
@@ -77,6 +78,7 @@ export const createVendorSchema = z.object({
   phone: z.string().max(50).optional().nullable(),
   address: z.string().max(500).optional().nullable(),
   taxId: z.string().max(50).optional().nullable(),
+  category: z.string().max(50).optional().nullable(),
   paymentTerms: z.number().int().min(0).max(365).default(30),
 });
 

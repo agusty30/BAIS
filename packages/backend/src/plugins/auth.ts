@@ -1,7 +1,9 @@
 import fp from 'fastify-plugin';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import fjwt from '@fastify/jwt';
+import { eq } from 'drizzle-orm';
 import { Permission, Role, ROLE_PERMISSIONS } from '@bais/shared';
+import { roles } from '../db/schema.js';
 import { ForbiddenError, UnauthorizedError } from './error-handler.js';
 
 declare module 'fastify' {
@@ -40,7 +42,13 @@ async function auth(app: FastifyInstance) {
   app.decorate('authenticate', async (request: FastifyRequest) => {
     try {
       const payload = await request.jwtVerify() as { sub: string; email: string; role: Role };
-      const permissions = ROLE_PERMISSIONS[payload.role] || [];
+      let permissions: Permission[];
+      try {
+        const [dbRole] = await app.db.select().from(roles).where(eq(roles.name, payload.role)).limit(1);
+        permissions = dbRole ? (dbRole.permissions as Permission[]) : (ROLE_PERMISSIONS[payload.role] || []);
+      } catch {
+        permissions = ROLE_PERMISSIONS[payload.role] || [];
+      }
       request.user = { ...payload, permissions };
     } catch {
       throw new UnauthorizedError('Invalid or expired token');

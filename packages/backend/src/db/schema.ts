@@ -36,7 +36,7 @@ export const users = pgTable('users', {
 // Accounts (Chart of Accounts)
 export const accounts = pgTable('accounts', {
   id: uuid('id').defaultRandom().primaryKey(),
-  code: varchar('code', { length: 10 }).notNull().unique(),
+  code: varchar('code', { length: 24 }).notNull().unique(),
   name: varchar('name', { length: 255 }).notNull(),
   type: accountTypeEnum('type').notNull(),
   normalBalance: normalBalanceEnum('normal_balance').notNull(),
@@ -245,6 +245,7 @@ export const customers = pgTable('customers', {
   phone: varchar('phone', { length: 50 }),
   address: text('address'),
   taxId: varchar('tax_id', { length: 50 }),
+  category: varchar('category', { length: 50 }),
   creditLimit: integer('credit_limit').notNull().default(0),
   balance: integer('balance').notNull().default(0),
   isActive: boolean('is_active').notNull().default(true),
@@ -262,6 +263,7 @@ export const vendors = pgTable('vendors', {
   phone: varchar('phone', { length: 50 }),
   address: text('address'),
   taxId: varchar('tax_id', { length: 50 }),
+  category: varchar('category', { length: 50 }),
   paymentTerms: integer('payment_terms').notNull().default(30),
   balance: integer('balance').notNull().default(0),
   isActive: boolean('is_active').notNull().default(true),
@@ -346,6 +348,30 @@ export const settings = pgTable('settings', {
   value: text('value').notNull(),
   category: varchar('category', { length: 50 }).notNull().default('general'),
   updatedById: uuid('updated_by_id').references(() => users.id),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Roles (dynamic permission assignments)
+export const roles = pgTable('roles', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 50 }).notNull().unique(),
+  description: text('description'),
+  permissions: jsonb('permissions').notNull().default([]),
+  isSystem: boolean('is_system').notNull().default(false),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Bank Accounts
+export const bankAccounts = pgTable('bank_accounts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  bankName: varchar('bank_name', { length: 100 }).notNull(),
+  accountNumber: varchar('account_number', { length: 50 }).notNull(),
+  currency: varchar('currency', { length: 5 }).notNull().default('IDR'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 

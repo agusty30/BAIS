@@ -1,11 +1,12 @@
 import type { FastifyInstance } from 'fastify';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, gte, lte, isNull, or } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
-import { journalEntries, journalEntryLines, accountBalances } from '../../db/schema.js';
+import { journalEntries, journalEntryLines, accountBalances, workflowTemplates, approvalWorkflows, approvalSteps, fiscalPeriods } from '../../db/schema.js';
 import { Permission, JournalEntryStatus, createJournalEntrySchema } from '@bais/shared';
 import { requirePermission } from '../../plugins/auth.js';
 import { NotFoundError, ValidationError } from '../../plugins/error-handler.js';
 import { createBlockchainRecord } from '../blockchain/service.js';
+import { logAudit } from '../../lib/audit.js';
 
 export async function journalRoutes(app: FastifyInstance) {
   // List journal entries
@@ -44,15 +45,40 @@ export async function journalRoutes(app: FastifyInstance) {
   }, async (request, reply) => {
     const body = createJournalEntrySchema.parse(request.body);
     const totalAmount = body.lines.reduce((sum, l) => sum + l.debitAmount, 0);
+    const entryDate = new Date(body.date);
+
+    let fiscalPeriodId = body.fiscalPeriodId;
+    if (!fiscalPeriodId) {
+      const openPeriods = await app.db.select().from(fiscalPeriods)
+        .where(and(
+          eq(fiscalPeriods.status, 'open'),
+          lte(fiscalPeriods.startDate, entryDate),
+          gte(fiscalPeriods.endDate, entryDate),
+        )).limit(1);
+
+      if (openPeriods.length > 0) {
+        fiscalPeriodId = openPeriods[0].id;
+      } else {
+        const allOpen = await app.db.select().from(fiscalPeriods)
+          .where(eq(fiscalPeriods.status, 'open'))
+          .orderBy(desc(fiscalPeriods.startDate))
+          .limit(1);
+        if (allOpen.length > 0) {
+          fiscalPeriodId = allOpen[0].id;
+        } else {
+          throw new ValidationError('No open fiscal period found. Please create a fiscal period first.');
+        }
+      }
+    }
 
     const entryNumber = `JE-${Date.now()}`;
     const [entry] = await app.db.insert(journalEntries).values({
       entryNumber,
-      date: new Date(body.date),
+      date: entryDate,
       description: body.description,
       reference: body.reference || null,
       status: 'draft',
-      fiscalPeriodId: body.fiscalPeriodId,
+      fiscalPeriodId,
       totalAmount,
       createdById: request.user.sub,
     }).returning();
@@ -67,6 +93,10 @@ export async function journalRoutes(app: FastifyInstance) {
     }));
 
     await app.db.insert(journalEntryLines).values(lineValues);
+
+    await logAudit(app, request, 'create', 'journal_entry', entry.id, {
+      newValues: { description: body.description, reference: body.reference, totalAmount: entry.totalAmount, linesCount: lineValues.length },
+    });
 
     return reply.status(201).send(entry);
   });
@@ -83,11 +113,55 @@ export async function journalRoutes(app: FastifyInstance) {
       throw new ValidationError('Only draft entries can be submitted');
     }
 
+    const templates = await app.db.select().from(workflowTemplates)
+      .where(eq(workflowTemplates.isActive, true))
+      .orderBy(workflowTemplates.minAmount);
+
+    const template = templates.find(t =>
+      entry.totalAmount >= t.minAmount &&
+      (t.maxAmount === null || entry.totalAmount < t.maxAmount)
+    ) ?? templates[templates.length - 1];
+
+    if (!template) {
+      const [updated] = await app.db
+        .update(journalEntries)
+        .set({ status: 'approved', updatedAt: new Date() })
+        .where(eq(journalEntries.id, id))
+        .returning();
+      await logAudit(app, request, 'submit', 'journal_entry', id, {
+        oldValues: { status: 'draft' }, newValues: { status: 'approved' },
+      });
+      return updated;
+    }
+
+    const steps = template.steps as { stepOrder: number; requiredRole: string; escalationTimeoutHours: number }[];
+
+    const [workflow] = await app.db.insert(approvalWorkflows).values({
+      journalEntryId: id,
+      status: 'pending',
+      currentStep: 1,
+      totalSteps: steps.length,
+      initiatedById: request.user.sub,
+    }).returning();
+
+    await app.db.insert(approvalSteps).values(
+      steps.map(s => ({
+        workflowId: workflow.id,
+        stepOrder: s.stepOrder,
+        requiredRole: s.requiredRole,
+        status: 'pending' as const,
+      }))
+    );
+
     const [updated] = await app.db
       .update(journalEntries)
       .set({ status: 'pending_approval', updatedAt: new Date() })
       .where(eq(journalEntries.id, id))
       .returning();
+
+    await logAudit(app, request, 'submit', 'journal_entry', id, {
+      oldValues: { status: 'draft' }, newValues: { status: 'pending_approval' },
+    });
 
     return updated;
   });
@@ -148,6 +222,10 @@ export async function journalRoutes(app: FastifyInstance) {
       }
 
       return result;
+    });
+
+    await logAudit(app, request, 'post', 'journal_entry', id, {
+      oldValues: { status: 'approved' }, newValues: { status: 'posted' },
     });
 
     return posted;

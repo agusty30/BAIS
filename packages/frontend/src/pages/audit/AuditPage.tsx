@@ -127,12 +127,59 @@ export function AuditPage() {
                                 <p className="font-mono text-slate-700 dark:text-slate-300">{log.ipAddress || '—'}</p>
                               </div>
                             </div>
-                            {log.details && (
+                            {log.details?.oldValues && log.details?.newValues && (
+                              <div>
+                                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Changes</span>
+                                <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden text-xs">
+                                  <div className="grid grid-cols-3 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 font-medium text-slate-500 dark:text-slate-400">
+                                    <span>Field</span><span>Old</span><span>New</span>
+                                  </div>
+                                  {(() => {
+                                    const allKeys = new Set([
+                                      ...Object.keys(log.details.oldValues || {}),
+                                      ...Object.keys(log.details.newValues || {}),
+                                    ]);
+                                    return Array.from(allKeys).map((key) => {
+                                      const oldVal = log.details.oldValues?.[key];
+                                      const newVal = log.details.newValues?.[key];
+                                      const changed = JSON.stringify(oldVal) !== JSON.stringify(newVal);
+                                      return (
+                                        <div key={key} className={`grid grid-cols-3 px-3 py-1.5 border-t border-slate-200 dark:border-slate-700 ${changed ? 'bg-amber-50 dark:bg-amber-950/20' : ''}`}>
+                                          <span className="font-medium text-slate-700 dark:text-slate-300">{key}</span>
+                                          <span className={`font-mono ${changed ? 'text-red-600 dark:text-red-400 line-through' : 'text-slate-500 dark:text-slate-400'}`}>
+                                            {oldVal !== undefined ? (typeof oldVal === 'object' ? JSON.stringify(oldVal) : String(oldVal)) : '—'}
+                                          </span>
+                                          <span className={`font-mono ${changed ? 'text-success-600 dark:text-success-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                                            {newVal !== undefined ? (typeof newVal === 'object' ? JSON.stringify(newVal) : String(newVal)) : '—'}
+                                          </span>
+                                        </div>
+                                      );
+                                    });
+                                  })()}
+                                </div>
+                              </div>
+                            )}
+                            {log.details && !log.details.oldValues && !log.details.newValues && (
                               <div>
                                 <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Details</span>
                                 <pre className="mt-1 rounded-lg bg-slate-100 dark:bg-slate-900 p-3 text-xs text-slate-700 dark:text-slate-300 overflow-x-auto border border-slate-200 dark:border-slate-700">
                                   {JSON.stringify(log.details, null, 2)}
                                 </pre>
+                              </div>
+                            )}
+                            {log.details?.newValues && !log.details?.oldValues && (
+                              <div>
+                                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Created Values</span>
+                                <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden text-xs">
+                                  {Object.entries(log.details.newValues).map(([key, val]: [string, any]) => (
+                                    <div key={key} className="grid grid-cols-2 px-3 py-1.5 border-t border-slate-200 dark:border-slate-700 first:border-t-0">
+                                      <span className="font-medium text-slate-700 dark:text-slate-300">{key}</span>
+                                      <span className="font-mono text-success-600 dark:text-success-400">
+                                        {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             )}
                           </div>

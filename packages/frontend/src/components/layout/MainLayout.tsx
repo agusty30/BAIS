@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/auth';
 import { useThemeStore } from '../../stores/theme';
 import {
@@ -9,6 +10,7 @@ import {
   CheckSquare,
   BarChart3,
   Shield,
+  ShieldCheck,
   Activity,
   Target,
   Users,
@@ -31,43 +33,43 @@ import { NotificationBell } from '../NotificationBell';
 
 interface NavSection {
   label: string;
-  items: { name: string; href: string; icon: any }[];
+  items: { key: string; href: string; icon: any }[];
 }
 
 const navSections: NavSection[] = [
   {
     label: 'Overview',
     items: [
-      { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+      { key: 'nav.dashboard', href: '/', icon: LayoutDashboard },
     ],
   },
   {
     label: 'Financial',
     items: [
-      { name: 'Chart of Accounts', href: '/accounts', icon: BookOpen },
-      { name: 'General Ledger', href: '/general-ledger', icon: BookOpenCheck },
-      { name: 'Journal Entries', href: '/journal', icon: FileText },
-      { name: 'Approvals', href: '/approvals', icon: CheckSquare },
-      { name: 'Budget', href: '/budget', icon: Wallet },
+      { key: 'nav.chartOfAccounts', href: '/accounts', icon: BookOpen },
+      { key: 'nav.journalEntries', href: '/journal', icon: FileText },
+      { key: 'nav.approvals', href: '/approvals', icon: CheckSquare },
+      { key: 'nav.budget', href: '/budget', icon: Wallet },
     ],
   },
   {
     label: 'Operations',
     items: [
-      { name: 'Invoices', href: '/invoices', icon: Receipt },
-      { name: 'Payments', href: '/payments', icon: CreditCard },
-      { name: 'Customers', href: '/customers', icon: UserCircle },
-      { name: 'Vendors', href: '/vendors', icon: Store },
+      { key: 'nav.invoices', href: '/invoices', icon: Receipt },
+      { key: 'nav.payments', href: '/payments', icon: CreditCard },
+      { key: 'nav.customers', href: '/customers', icon: UserCircle },
+      { key: 'nav.vendors', href: '/vendors', icon: Store },
     ],
   },
   {
     label: 'Compliance',
     items: [
-      { name: 'Reports', href: '/reports', icon: BarChart3 },
-      { name: 'Audit Trail', href: '/audit', icon: Shield },
-      { name: 'Blockchain Explorer', href: '/blockchain', icon: Blocks },
-      { name: 'COSO Framework', href: '/coso', icon: Target },
-      { name: 'PIECES Analysis', href: '/pieces', icon: Activity },
+      { key: 'nav.generalLedger', href: '/general-ledger', icon: BookOpenCheck },
+      { key: 'nav.reports', href: '/reports', icon: BarChart3 },
+      { key: 'nav.auditTrail', href: '/audit', icon: Shield },
+      { key: 'nav.blockchainExplorer', href: '/blockchain', icon: Blocks },
+      { key: 'nav.cosoFramework', href: '/coso', icon: Target },
+      { key: 'nav.piecesAnalysis', href: '/pieces', icon: Activity },
     ],
   },
 ];
@@ -75,7 +77,8 @@ const navSections: NavSection[] = [
 const adminSection: NavSection = {
   label: 'Admin',
   items: [
-    { name: 'User Management', href: '/users', icon: Users },
+    { key: 'nav.userManagement', href: '/users', icon: Users },
+    { key: 'nav.roleManagement', href: '/roles', icon: ShieldCheck },
   ],
 };
 
@@ -85,6 +88,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
+  const { t } = useTranslation();
 
   const sections = user?.role === 'admin'
     ? [...navSections, adminSection]
@@ -120,7 +124,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                   const isActive = location.pathname === item.href;
                   return (
                     <Link
-                      key={item.name}
+                      key={item.key}
                       to={item.href}
                       onClick={() => setSidebarOpen(false)}
                       className={`mb-0.5 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ${
@@ -130,7 +134,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       }`}
                     >
                       <item.icon className={`h-4 w-4 ${isActive ? 'text-success-400' : ''}`} />
-                      {item.name}
+                      {t(item.key)}
                     </Link>
                   );
                 })}

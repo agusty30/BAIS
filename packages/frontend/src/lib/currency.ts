@@ -1,4 +1,4 @@
-export type CurrencyCode = 'IDR' | 'USD';
+export type CurrencyCode = 'IDR' | 'USD' | 'SGD' | 'EUR' | 'GBP';
 
 export interface CurrencyConfig {
   code: CurrencyCode;
@@ -26,10 +26,34 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     decimals: 2,
     rate: 16_300,
   },
+  SGD: {
+    code: 'SGD',
+    symbol: 'S$',
+    name: 'Singapore Dollar',
+    locale: 'en-SG',
+    decimals: 2,
+    rate: 12_100,
+  },
+  EUR: {
+    code: 'EUR',
+    symbol: '€',
+    name: 'Euro',
+    locale: 'de-DE',
+    decimals: 2,
+    rate: 17_800,
+  },
+  GBP: {
+    code: 'GBP',
+    symbol: '£',
+    name: 'British Pound',
+    locale: 'en-GB',
+    decimals: 2,
+    rate: 20_700,
+  },
 };
 
 export const BASE_CURRENCY: CurrencyCode = 'IDR';
-export const EXCHANGE_RATE_DATE = '2026-06-28';
+export const EXCHANGE_RATE_DATE = '2026-06-30';
 
 export function formatCurrency(cents: number, currencyCode: CurrencyCode = 'IDR'): string {
   const config = CURRENCIES[currencyCode];
@@ -39,13 +63,13 @@ export function formatCurrency(cents: number, currencyCode: CurrencyCode = 'IDR'
     ? baseAmount
     : baseAmount / config.rate;
 
-  if (currencyCode === 'IDR') {
-    return `Rp ${Math.round(converted).toLocaleString('id-ID')}`;
+  if (config.decimals === 0) {
+    return `${config.symbol} ${Math.round(converted).toLocaleString(config.locale)}`;
   }
 
-  return `$${converted.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+  return `${config.symbol}${converted.toLocaleString(config.locale, {
+    minimumFractionDigits: config.decimals,
+    maximumFractionDigits: config.decimals,
   })}`;
 }
 
@@ -67,7 +91,7 @@ export function formatCurrencyInput(cents: number, currencyCode: CurrencyCode = 
     return String(cents / 100);
   }
   const config = CURRENCIES[currencyCode];
-  return (cents / 100 / config.rate).toFixed(2);
+  return (cents / 100 / config.rate).toFixed(config.decimals);
 }
 
 export function formatCurrencyShort(cents: number, currencyCode: CurrencyCode = 'IDR'): string {

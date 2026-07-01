@@ -1,0 +1,1 @@
+ALTER TABLE "accounts" ALTER COLUMN "code" SET DATA TYPE varchar(24);

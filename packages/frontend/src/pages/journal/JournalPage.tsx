@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { FileText, Plus, X, Send, CheckCircle, Trash2 } from 'lucide-react';
 import { formatCurrency, parseCurrencyInput, formatCurrencyInput } from '../../lib/currency';
@@ -11,6 +12,7 @@ export function JournalPage() {
   const [showCreate, setShowCreate] = useState(false);
   const queryClient = useQueryClient();
   const { currency } = useCurrencyStore();
+  const { t } = useTranslation();
 
   const { data, isLoading } = useQuery({
     queryKey: ['journal-entries'],
@@ -39,14 +41,14 @@ export function JournalPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="page-title">Journal Entries</h1>
-          <p className="page-subtitle">Create and manage journal entries</p>
+          <h1 className="page-title">{t('journal.title')}</h1>
+          <p className="page-subtitle">{t('journal.subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           <CurrencySelector />
           <button onClick={() => setShowCreate(true)} className="btn-primary">
             <Plus className="h-4 w-4" />
-            New Entry
+            {t('journal.newEntry')}
           </button>
         </div>
       </div>
@@ -202,6 +204,23 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
     setLines(prev => {
       const u = [...prev];
       u[idx] = { ...u[idx], debitAmount: cents };
+      if (u.length === 1 && cents > 0) {
+        u.push({ accountId: '', debitAmount: 0, creditAmount: cents, description: '' });
+        updated.push('');
+        setDebitTexts(updated);
+        setCreditTexts(prev2 => {
+          const c = [...prev2];
+          c.push(formatCurrencyInput(cents, currency));
+          return c;
+        });
+      } else if (u.length === 2 && idx === 0 && cents > 0) {
+        u[1] = { ...u[1], creditAmount: cents };
+        setCreditTexts(prev2 => {
+          const c = [...prev2];
+          c[1] = formatCurrencyInput(cents, currency);
+          return c;
+        });
+      }
       return u;
     });
   };
@@ -214,6 +233,22 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
     setLines(prev => {
       const u = [...prev];
       u[idx] = { ...u[idx], creditAmount: cents };
+      if (u.length === 1 && cents > 0) {
+        u.push({ accountId: '', debitAmount: cents, creditAmount: 0, description: '' });
+        setCreditTexts(prev2 => [...prev2, '']);
+        setDebitTexts(prev2 => {
+          const d = [...prev2];
+          d.push(formatCurrencyInput(cents, currency));
+          return d;
+        });
+      } else if (u.length === 2 && idx === 0 && cents > 0) {
+        u[1] = { ...u[1], debitAmount: cents };
+        setDebitTexts(prev2 => {
+          const d = [...prev2];
+          d[1] = formatCurrencyInput(cents, currency);
+          return d;
+        });
+      }
       return u;
     });
   };
@@ -237,7 +272,6 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!form.fiscalPeriodId) { setError('Select a fiscal period'); return; }
     if (!form.description.trim()) { setError('Description is required'); return; }
 
     // Re-parse amounts from text inputs as safety net
@@ -255,7 +289,9 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
     const tc = finalLines.reduce((sum, l) => sum + l.creditAmount, 0);
     if (td !== tc || td === 0) { setError(`Total debits (${formatCurrency(td, currency)}) must equal total credits (${formatCurrency(tc, currency)})`); return; }
 
-    mutation.mutate({ ...form, lines: finalLines });
+    const payload: any = { date: form.date, description: form.description, reference: form.reference || undefined, lines: finalLines };
+    if (form.fiscalPeriodId) payload.fiscalPeriodId = form.fiscalPeriodId;
+    mutation.mutate(payload);
   };
 
   return (
@@ -277,9 +313,9 @@ function CreateJournalEntryModal({ onClose }: { onClose: () => void }) {
               <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input-field" required />
             </div>
             <div>
-              <label className="label">Fiscal Period</label>
-              <select value={form.fiscalPeriodId} onChange={(e) => setForm({ ...form, fiscalPeriodId: e.target.value })} className="input-field" required>
-                <option value="">Select period...</option>
+              <label className="label">Fiscal Period (auto-detected)</label>
+              <select value={form.fiscalPeriodId} onChange={(e) => setForm({ ...form, fiscalPeriodId: e.target.value })} className="input-field">
+                <option value="">Auto-detect from date</option>
                 {(periods?.data || []).map((p: any) => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
