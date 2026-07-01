@@ -30,6 +30,8 @@ import { budgetRoutes } from './modules/budget/routes.js';
 import { settingsRoutes } from './modules/settings/routes.js';
 import { blockchainRoutes } from './modules/blockchain/routes.js';
 import { rolesRoutes } from './modules/roles/routes.js';
+import { taxRoutes } from './modules/tax/routes.js';
+import { inventoryRoutes } from './modules/inventory/routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const startTime = Date.now();
@@ -129,6 +131,8 @@ export async function buildApp() {
   await app.register(settingsRoutes, { prefix: '/api/settings' });
   await app.register(blockchainRoutes, { prefix: '/api/blockchain' });
   await app.register(rolesRoutes, { prefix: '/api/roles' });
+  await app.register(taxRoutes, { prefix: '/api/tax-rates' });
+  await app.register(inventoryRoutes, { prefix: '/api/inventory' });
 
   // Serve frontend static files in production
   const frontendDist = path.resolve(__dirname, '../../frontend/dist');

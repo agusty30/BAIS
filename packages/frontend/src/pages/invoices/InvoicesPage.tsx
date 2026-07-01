@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
-import { Plus, FileText, X } from 'lucide-react';
+import { Plus, FileText, X, Pencil, Copy, Check } from 'lucide-react';
 import { formatCurrency, parseCurrencyInput } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
 import { CurrencySelector } from '../../components/CurrencySelector';
@@ -18,9 +19,12 @@ const statusColors: Record<string, string> = {
 
 export function InvoicesPage() {
   const [showCreate, setShowCreate] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<any>(null);
+  const [amendingInvoice, setAmendingInvoice] = useState<any>(null);
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const { currency } = useCurrencyStore();
+  const { t } = useTranslation();
   const fc = (cents: number) => formatCurrency(cents, currency);
 
   const { data, isLoading } = useQuery({
@@ -111,17 +115,21 @@ export function InvoicesPage() {
               <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Amount</th>
               <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Paid</th>
               <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {isLoading ? (
-              <tr><td colSpan={8} className="px-6 py-8 text-center text-slate-500 dark:text-slate-400">Loading...</td></tr>
+              <tr><td colSpan={9} className="px-6 py-8 text-center text-slate-500 dark:text-slate-400">Loading...</td></tr>
             ) : (data?.data || []).length === 0 ? (
-              <tr><td colSpan={8} className="px-6 py-8 text-center text-slate-500 dark:text-slate-400">No invoices found</td></tr>
+              <tr><td colSpan={9} className="px-6 py-8 text-center text-slate-500 dark:text-slate-400">No invoices found</td></tr>
             ) : (
               (data?.data || []).map((inv: any) => (
                 <tr key={inv.id} className="table-row">
-                  <td className="px-6 py-3 text-sm font-mono font-medium text-slate-900 dark:text-white">{inv.invoiceNumber}</td>
+                  <td className="px-6 py-3 text-sm font-mono font-medium text-slate-900 dark:text-white">
+                    {inv.invoiceNumber}
+                    {inv.amendedFromId && <span className="ml-1 text-xs text-amber-500" title="Amendment">A</span>}
+                  </td>
                   <td className="px-6 py-3 text-sm">
                     <span className={`badge ${inv.type === 'receivable' ? 'bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300' : 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300'}`}>
                       {inv.type === 'receivable' ? 'AR' : 'AP'}
@@ -135,6 +143,20 @@ export function InvoicesPage() {
                   <td className="px-6 py-3 text-center">
                     <span className={`badge ${statusColors[inv.status] || ''}`}>{inv.status.replace('_', ' ')}</span>
                   </td>
+                  <td className="px-6 py-3 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      {inv.status === 'draft' && (
+                        <button onClick={() => setEditingInvoice(inv)} className="rounded p-1.5 text-slate-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-950/30 transition-colors" title={t('common.edit')}>
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                      )}
+                      {inv.status !== 'draft' && inv.status !== 'cancelled' && (
+                        <button onClick={() => setAmendingInvoice(inv)} className="rounded p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors" title="Amend">
+                          <Copy className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))
             )}
@@ -143,6 +165,8 @@ export function InvoicesPage() {
       </div>
 
       {showCreate && <CreateInvoiceModal onClose={() => setShowCreate(false)} />}
+      {editingInvoice && <EditInvoiceModal invoice={editingInvoice} onClose={() => setEditingInvoice(null)} />}
+      {amendingInvoice && <AmendInvoiceModal invoice={amendingInvoice} onClose={() => setAmendingInvoice(null)} />}
     </div>
   );
 }
@@ -267,6 +291,162 @@ function CreateInvoiceModal({ onClose }: { onClose: () => void }) {
             <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
             <button type="submit" disabled={mutation.isPending} className="btn-primary flex-1">
               {mutation.isPending ? 'Creating...' : 'Create Invoice'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function EditInvoiceModal({ invoice, onClose }: { invoice: any; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const { currency } = useCurrencyStore();
+  const { t } = useTranslation();
+  const addToast = useToastStore((s) => s.addToast);
+  const [amountText, setAmountText] = useState(formatCurrency(invoice.totalAmount, currency).replace(/[^\d.,]/g, ''));
+  const [form, setForm] = useState({
+    date: new Date(invoice.date).toISOString().split('T')[0],
+    dueDate: new Date(invoice.dueDate).toISOString().split('T')[0],
+    description: invoice.description || '',
+  });
+  const [error, setError] = useState('');
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => api.put(`/invoices/${invoice.id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices-summary'] });
+      addToast(t('invoices.updated'), 'success');
+      onClose();
+    },
+    onError: (err: any) => setError(err.response?.data?.message || 'Failed to update'),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    const totalAmount = parseCurrencyInput(amountText, currency);
+    if (totalAmount <= 0) { setError('Amount must be greater than 0'); return; }
+    mutation.mutate({
+      date: form.date,
+      dueDate: form.dueDate,
+      totalAmount,
+      description: form.description,
+    });
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-card max-w-md" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white font-display">{t('invoices.editInvoice')}</h2>
+          <button onClick={onClose} className="rounded p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><X className="h-5 w-5" /></button>
+        </div>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 font-mono">{invoice.invoiceNumber}</p>
+        {error && <div className="error-box mb-4">{error}</div>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">{t('common.date')} *</label>
+              <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input-field" required />
+            </div>
+            <div>
+              <label className="label">{t('invoices.dueDate')} *</label>
+              <input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} className="input-field" required />
+            </div>
+          </div>
+          <div>
+            <label className="label">{t('common.amount')} ({currency}) *</label>
+            <input type="text" inputMode="decimal" value={amountText} onChange={(e) => setAmountText(e.target.value)} className="input-field" required />
+          </div>
+          <div>
+            <label className="label">{t('common.description')} *</label>
+            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input-field" rows={2} required />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">{t('common.cancel')}</button>
+            <button type="submit" disabled={mutation.isPending} className="btn-primary flex-1">
+              <Check className="h-4 w-4" />
+              {mutation.isPending ? t('common.loading') : t('common.save')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function AmendInvoiceModal({ invoice, onClose }: { invoice: any; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const { currency } = useCurrencyStore();
+  const { t } = useTranslation();
+  const addToast = useToastStore((s) => s.addToast);
+  const [amountText, setAmountText] = useState(formatCurrency(invoice.totalAmount, currency).replace(/[^\d.,]/g, ''));
+  const [form, setForm] = useState({
+    dueDate: new Date(invoice.dueDate).toISOString().split('T')[0],
+    reason: '',
+    description: '',
+  });
+  const [error, setError] = useState('');
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => api.post(`/invoices/${invoice.id}/amend`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices-summary'] });
+      addToast(t('invoices.amended'), 'success');
+      onClose();
+    },
+    onError: (err: any) => setError(err.response?.data?.message || 'Failed to amend'),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    const totalAmount = parseCurrencyInput(amountText, currency);
+    if (totalAmount <= 0) { setError('Amount must be greater than 0'); return; }
+    mutation.mutate({
+      totalAmount,
+      dueDate: form.dueDate,
+      reason: form.reason || undefined,
+      description: form.description || undefined,
+    });
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-card max-w-md" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white font-display">{t('invoices.amendInvoice')}</h2>
+          <button onClick={onClose} className="rounded p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3 mb-4 text-sm text-amber-700 dark:text-amber-300">
+          {t('invoices.amendWarning', { number: invoice.invoiceNumber })}
+        </div>
+        {error && <div className="error-box mb-4">{error}</div>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="label">{t('invoices.newAmount')} ({currency}) *</label>
+            <input type="text" inputMode="decimal" value={amountText} onChange={(e) => setAmountText(e.target.value)} className="input-field" required />
+          </div>
+          <div>
+            <label className="label">{t('invoices.newDueDate')}</label>
+            <input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} className="input-field" />
+          </div>
+          <div>
+            <label className="label">{t('invoices.reason')}</label>
+            <input type="text" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} className="input-field" placeholder="e.g. Price adjustment, quantity change" />
+          </div>
+          <div>
+            <label className="label">{t('common.description')}</label>
+            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input-field" rows={2} placeholder="Optional new description" />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">{t('common.cancel')}</button>
+            <button type="submit" disabled={mutation.isPending} className="btn-primary flex-1">
+              <Copy className="h-4 w-4" />
+              {mutation.isPending ? t('common.loading') : t('invoices.createAmendment')}
             </button>
           </div>
         </form>

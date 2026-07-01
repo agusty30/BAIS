@@ -17,6 +17,8 @@
     "piecesAnalysis": "Analisis PIECES",
     "userManagement": "Manajemen Pengguna",
     "roleManagement": "Manajemen Peran",
+    "taxConfig": "Konfigurasi Pajak",
+    "inventory": "Inventaris",
     "settings": "Pengaturan"
   },
   "common": {
@@ -143,6 +145,18 @@
     "paymentTerms": "Syarat Pembayaran",
     "vendorAdded": "Pemasok berhasil ditambahkan"
   },
+  "invoices": {
+    "editInvoice": "Ubah Faktur",
+    "amendInvoice": "Amandemen Faktur",
+    "updated": "Faktur berhasil diperbarui",
+    "amended": "Amandemen berhasil dibuat",
+    "dueDate": "Tanggal Jatuh Tempo",
+    "amendWarning": "Ini akan membatalkan faktur {{number}} dan membuat amandemen baru. Tindakan ini tidak dapat dibatalkan.",
+    "newAmount": "Jumlah Baru",
+    "newDueDate": "Tanggal Jatuh Tempo Baru",
+    "reason": "Alasan Amandemen",
+    "createAmendment": "Buat Amandemen"
+  },
   "budget": {
     "title": "Manajemen Anggaran",
     "subtitle": "Rencanakan dan pantau alokasi anggaran",
@@ -170,5 +184,50 @@
     "passwordChanged": "Kata sandi berhasil diubah",
     "language": "Bahasa",
     "selectLanguage": "Pilih Bahasa"
+  },
+  "tax": {
+    "title": "Konfigurasi Pajak",
+    "subtitle": "Kelola tarif pajak untuk faktur dan transaksi",
+    "addRate": "Tambah Tarif Pajak",
+    "editRate": "Ubah Tarif Pajak",
+    "code": "Kode",
+    "type": "Jenis",
+    "rate": "Tarif",
+    "ratePercent": "Tarif (%)",
+    "noRates": "Belum ada tarif pajak",
+    "created": "Tarif pajak berhasil dibuat",
+    "updated": "Tarif pajak berhasil diperbarui",
+    "deleted": "Tarif pajak berhasil dihapus",
+    "confirmDelete": "Apakah Anda yakin ingin menghapus tarif pajak ini?",
+    "infoTitle": "Referensi Pajak Indonesia"
+  },
+  "inventory": {
+    "title": "Manajemen Inventaris",
+    "subtitle": "Pantau produk, stok, dan pergerakan inventaris",
+    "products": "Produk",
+    "transactions": "Transaksi",
+    "totalProducts": "Total Produk",
+    "activeProducts": "Produk Aktif",
+    "stockValue": "Nilai Stok Total",
+    "lowStock": "Peringatan Stok Rendah",
+    "addProduct": "Tambah Produk",
+    "editProduct": "Ubah Produk",
+    "product": "Produk",
+    "stock": "Stok",
+    "unitCost": "Harga Pokok",
+    "salePrice": "Harga Jual",
+    "reorderLevel": "Batas Pesan Ulang",
+    "costMethod": "Metode Biaya",
+    "qty": "Jml",
+    "reference": "Referensi",
+    "noProducts": "Belum ada produk",
+    "noTransactions": "Belum ada transaksi inventaris",
+    "productCreated": "Produk berhasil dibuat",
+    "productUpdated": "Produk berhasil diperbarui",
+    "productDeleted": "Produk berhasil dihapus",
+    "confirmDelete": "Apakah Anda yakin ingin menghapus produk ini?",
+    "recordTx": "Catat Transaksi Inventaris",
+    "txRecorded": "Transaksi berhasil dicatat",
+    "record": "Catat"
   }
 }

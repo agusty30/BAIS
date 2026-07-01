@@ -17,6 +17,8 @@
     "piecesAnalysis": "PIECES Analysis",
     "userManagement": "User Management",
     "roleManagement": "Role Management",
+    "taxConfig": "Tax Configuration",
+    "inventory": "Inventory",
     "settings": "Settings"
   },
   "common": {
@@ -143,6 +145,18 @@
     "paymentTerms": "Payment Terms",
     "vendorAdded": "Vendor added"
   },
+  "invoices": {
+    "editInvoice": "Edit Invoice",
+    "amendInvoice": "Amend Invoice",
+    "updated": "Invoice updated",
+    "amended": "Amendment created",
+    "dueDate": "Due Date",
+    "amendWarning": "This will cancel invoice {{number}} and create a new amendment. This action cannot be undone.",
+    "newAmount": "New Amount",
+    "newDueDate": "New Due Date",
+    "reason": "Reason for Amendment",
+    "createAmendment": "Create Amendment"
+  },
   "budget": {
     "title": "Budget Management",
     "subtitle": "Plan and track budget allocations",
@@ -170,5 +184,50 @@
     "passwordChanged": "Password changed successfully",
     "language": "Language",
     "selectLanguage": "Select Language"
+  },
+  "tax": {
+    "title": "Tax Configuration",
+    "subtitle": "Manage tax rates for invoices and transactions",
+    "addRate": "Add Tax Rate",
+    "editRate": "Edit Tax Rate",
+    "code": "Code",
+    "type": "Type",
+    "rate": "Rate",
+    "ratePercent": "Rate (%)",
+    "noRates": "No tax rates configured",
+    "created": "Tax rate created",
+    "updated": "Tax rate updated",
+    "deleted": "Tax rate deleted",
+    "confirmDelete": "Are you sure you want to delete this tax rate?",
+    "infoTitle": "Indonesian Tax Reference"
+  },
+  "inventory": {
+    "title": "Inventory Management",
+    "subtitle": "Track products, stock levels, and inventory movements",
+    "products": "Products",
+    "transactions": "Transactions",
+    "totalProducts": "Total Products",
+    "activeProducts": "Active Products",
+    "stockValue": "Total Stock Value",
+    "lowStock": "Low Stock Alerts",
+    "addProduct": "Add Product",
+    "editProduct": "Edit Product",
+    "product": "Product",
+    "stock": "Stock",
+    "unitCost": "Unit Cost",
+    "salePrice": "Sale Price",
+    "reorderLevel": "Reorder Level",
+    "costMethod": "Cost Method",
+    "qty": "Qty",
+    "reference": "Reference",
+    "noProducts": "No products yet",
+    "noTransactions": "No inventory transactions",
+    "productCreated": "Product created",
+    "productUpdated": "Product updated",
+    "productDeleted": "Product deleted",
+    "confirmDelete": "Are you sure you want to delete this product?",
+    "recordTx": "Record Inventory Transaction",
+    "txRecorded": "Transaction recorded",
+    "record": "Record"
   }
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "invoices" ADD COLUMN "amended_from_id" uuid;

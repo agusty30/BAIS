@@ -58,6 +58,14 @@ export enum Permission {
   BUDGET_MANAGE = 'budget:manage',
   LEDGER_READ = 'ledger:read',
   SETTINGS_MANAGE = 'settings:manage',
+
+  // Tax
+  TAX_READ = 'tax:read',
+  TAX_MANAGE = 'tax:manage',
+
+  // Inventory
+  INVENTORY_READ = 'inventory:read',
+  INVENTORY_MANAGE = 'inventory:manage',
 }
 
 export interface User {

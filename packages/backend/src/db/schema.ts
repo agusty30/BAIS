@@ -286,6 +286,7 @@ export const invoices = pgTable('invoices', {
   totalAmount: integer('total_amount').notNull().default(0),
   paidAmount: integer('paid_amount').notNull().default(0),
   description: text('description').notNull().default(''),
+  amendedFromId: uuid('amended_from_id'),
   journalEntryId: uuid('journal_entry_id').references(() => journalEntries.id),
   createdById: uuid('created_by_id').notNull().references(() => users.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -362,6 +363,62 @@ export const roles = pgTable('roles', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
+
+export const taxTypeEnum = pgEnum('tax_type', ['vat', 'income', 'withholding', 'other']);
+export const inventoryTxTypeEnum = pgEnum('inventory_tx_type', ['in', 'out', 'adjustment']);
+export const costMethodEnum = pgEnum('cost_method', ['fifo', 'moving_average']);
+
+// Tax Rates
+export const taxRates = pgTable('tax_rates', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  code: varchar('code', { length: 20 }).notNull().unique(),
+  rate: integer('rate').notNull(),
+  type: taxTypeEnum('type').notNull(),
+  description: text('description'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Products
+export const products = pgTable('products', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  sku: varchar('sku', { length: 50 }).notNull().unique(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  category: varchar('category', { length: 100 }),
+  unitCost: integer('unit_cost').notNull().default(0),
+  salePrice: integer('sale_price').notNull().default(0),
+  stockQuantity: integer('stock_quantity').notNull().default(0),
+  reorderLevel: integer('reorder_level').notNull().default(0),
+  costMethod: costMethodEnum('cost_method').notNull().default('moving_average'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+  index('products_sku_idx').on(table.sku),
+  index('products_category_idx').on(table.category),
+]);
+
+// Inventory Transactions
+export const inventoryTransactions = pgTable('inventory_transactions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  productId: uuid('product_id').notNull().references(() => products.id),
+  type: inventoryTxTypeEnum('type').notNull(),
+  quantity: integer('quantity').notNull(),
+  unitCost: integer('unit_cost').notNull().default(0),
+  totalCost: integer('total_cost').notNull().default(0),
+  reference: varchar('reference', { length: 255 }),
+  notes: text('notes'),
+  date: timestamp('date').notNull(),
+  createdById: uuid('created_by_id').notNull().references(() => users.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [
+  index('inv_tx_product_idx').on(table.productId),
+  index('inv_tx_date_idx').on(table.date),
+  index('inv_tx_type_idx').on(table.type),
+]);
 
 // Bank Accounts
 export const bankAccounts = pgTable('bank_accounts', {

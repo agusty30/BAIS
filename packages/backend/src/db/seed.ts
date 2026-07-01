@@ -116,6 +116,19 @@ async function seed() {
     }).onConflictDoNothing({ target: schema.roles.name });
   }
 
+  // Seed default Indonesian tax rates
+  const defaultTaxRates = [
+    { name: 'PPN (Pajak Pertambahan Nilai)', code: 'PPN', rate: 1100, type: 'vat' as const, description: 'Indonesian Value Added Tax - 11%' },
+    { name: 'PPh 21 (Pajak Penghasilan Pasal 21)', code: 'PPH21', rate: 500, type: 'income' as const, description: 'Income tax on employment - 5% (lowest bracket)' },
+    { name: 'PPh 22 (Pajak Penghasilan Pasal 22)', code: 'PPH22', rate: 150, type: 'withholding' as const, description: 'Import/purchase withholding tax - 1.5%' },
+    { name: 'PPh 23 (Pajak Penghasilan Pasal 23)', code: 'PPH23', rate: 200, type: 'withholding' as const, description: 'Service withholding tax - 2%' },
+    { name: 'PPh 25 (Pajak Penghasilan Pasal 25)', code: 'PPH25', rate: 2500, type: 'income' as const, description: 'Corporate income tax installment - 25%' },
+    { name: 'PPh 4(2) Final', code: 'PPH4-2', rate: 1000, type: 'withholding' as const, description: 'Final income tax - 10% (rental income)' },
+  ];
+  for (const tax of defaultTaxRates) {
+    await db.insert(schema.taxRates).values(tax).onConflictDoNothing({ target: schema.taxRates.code });
+  }
+
   // Create default workflow templates (check if any exist first)
   const existingTemplates = await db.select({ id: schema.workflowTemplates.id })
     .from(schema.workflowTemplates)

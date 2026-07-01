@@ -25,6 +25,10 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.PAYMENTS_MANAGE,
     Permission.BUDGET_READ,
     Permission.LEDGER_READ,
+    Permission.TAX_READ,
+    Permission.TAX_MANAGE,
+    Permission.INVENTORY_READ,
+    Permission.INVENTORY_MANAGE,
   ],
   [Role.MANAGER]: [
     Permission.ACCOUNTS_READ,
@@ -46,6 +50,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.BUDGET_READ,
     Permission.BUDGET_MANAGE,
     Permission.LEDGER_READ,
+    Permission.TAX_READ,
+    Permission.INVENTORY_READ,
   ],
   [Role.AUDITOR]: [
     Permission.ACCOUNTS_READ,
@@ -64,6 +70,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.PAYMENTS_READ,
     Permission.BUDGET_READ,
     Permission.LEDGER_READ,
+    Permission.TAX_READ,
+    Permission.INVENTORY_READ,
   ],
   [Role.VIEWER]: [
     Permission.ACCOUNTS_READ,
@@ -77,5 +85,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.PAYMENTS_READ,
     Permission.BUDGET_READ,
     Permission.LEDGER_READ,
+    Permission.TAX_READ,
+    Permission.INVENTORY_READ,
   ],
 };

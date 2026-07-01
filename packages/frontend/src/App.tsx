@@ -12,6 +12,8 @@ import { COSOPage } from './pages/coso/COSOPage';
 import { PiecesPage } from './pages/pieces/PiecesPage';
 import { UsersPage } from './pages/users/UsersPage';
 import { RolesPage } from './pages/roles/RolesPage';
+import { TaxConfigPage } from './pages/tax/TaxConfigPage';
+import { InventoryPage } from './pages/inventory/InventoryPage';
 import { SettingsPage } from './pages/settings/SettingsPage';
 import { GeneralLedgerPage } from './pages/general-ledger/GeneralLedgerPage';
 import { CustomersPage } from './pages/customers/CustomersPage';
@@ -56,6 +58,8 @@ export default function App() {
                 <Route path="/pieces" element={<PiecesPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/roles" element={<RolesPage />} />
+                <Route path="/tax" element={<TaxConfigPage />} />
+                <Route path="/inventory" element={<InventoryPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
               </Routes>
             </MainLayout>

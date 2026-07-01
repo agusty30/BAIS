@@ -43,6 +43,27 @@
       "when": 1782872823041,
       "tag": "0005_worthless_celestials",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782909147176,
+      "tag": "0006_hot_catseye",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1782910595439,
+      "tag": "0007_graceful_thunderball",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1782912027563,
+      "tag": "0008_orange_scarlet_spider",
+      "breakpoints": true
     }
   ]
 }

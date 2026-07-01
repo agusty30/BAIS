@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   Blocks,
+  Package,
   Settings,
   Sun,
   Moon,
@@ -59,6 +60,7 @@ const navSections: NavSection[] = [
       { key: 'nav.payments', href: '/payments', icon: CreditCard },
       { key: 'nav.customers', href: '/customers', icon: UserCircle },
       { key: 'nav.vendors', href: '/vendors', icon: Store },
+      { key: 'nav.inventory', href: '/inventory', icon: Package },
     ],
   },
   {
@@ -79,6 +81,7 @@ const adminSection: NavSection = {
   items: [
     { key: 'nav.userManagement', href: '/users', icon: Users },
     { key: 'nav.roleManagement', href: '/roles', icon: ShieldCheck },
+    { key: 'nav.taxConfig', href: '/tax', icon: Receipt },
   ],
 };
 
