@@ -2,17 +2,21 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
-import { FileText, Plus, X, Send, CheckCircle, Trash2 } from 'lucide-react';
+import { FileText, Plus, X, Send, CheckCircle, Trash2, RotateCcw, Ban } from 'lucide-react';
 import { formatCurrency, parseCurrencyInput, formatCurrencyInput } from '../../lib/currency';
 import { useCurrencyStore } from '../../stores/currency';
 import { CurrencySelector } from '../../components/CurrencySelector';
 import { useToastStore } from '../../stores/toast';
+import { useAuthStore } from '../../stores/auth';
 
 export function JournalPage() {
   const [showCreate, setShowCreate] = useState(false);
   const queryClient = useQueryClient();
   const { currency } = useCurrencyStore();
   const { t } = useTranslation();
+  const addToast = useToastStore((s) => s.addToast);
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.role === 'admin';
 
   const { data, isLoading } = useQuery({
     queryKey: ['journal-entries'],
@@ -27,6 +31,24 @@ export function JournalPage() {
   const postMutation = useMutation({
     mutationFn: (id: string) => api.post(`/journal-entries/${id}/post`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['journal-entries'] }),
+  });
+
+  const resetMutation = useMutation({
+    mutationFn: (id: string) => api.post(`/journal-entries/${id}/reset-to-draft`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
+      addToast(t('journal.resetToDraft', 'Entry reset to draft'), 'success');
+    },
+    onError: (err: any) => addToast(err.response?.data?.message || 'Failed to reset', 'error'),
+  });
+
+  const voidMutation = useMutation({
+    mutationFn: (id: string) => api.post(`/journal-entries/${id}/void`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
+      addToast(t('journal.voided', 'Entry voided'), 'success');
+    },
+    onError: (err: any) => addToast(err.response?.data?.message || 'Failed to void', 'error'),
   });
 
   const statusColors: Record<string, string> = {
@@ -111,6 +133,26 @@ export function JournalPage() {
                         >
                           <CheckCircle className="h-3 w-3" /> Post
                         </button>
+                      )}
+                      {entry.status === 'pending_approval' && isAdmin && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => resetMutation.mutate(entry.id)}
+                            disabled={resetMutation.isPending}
+                            className="inline-flex items-center gap-1 rounded-lg bg-primary-50 dark:bg-primary-900/30 px-2.5 py-1 text-xs font-medium text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors"
+                            title="Reset to Draft"
+                          >
+                            <RotateCcw className="h-3 w-3" /> Draft
+                          </button>
+                          <button
+                            onClick={() => { if (confirm('Delete this entry? This cannot be undone.')) voidMutation.mutate(entry.id); }}
+                            disabled={voidMutation.isPending}
+                            className="inline-flex items-center gap-1 rounded-lg bg-red-50 dark:bg-red-900/30 px-2.5 py-1 text-xs font-medium text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                            title="Void & Delete"
+                          >
+                            <Ban className="h-3 w-3" /> Void
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>

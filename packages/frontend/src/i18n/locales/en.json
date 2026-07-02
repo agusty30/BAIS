@@ -114,7 +114,9 @@
     "credit": "Credit",
     "totals": "Totals",
     "entryCreated": "Journal entry created",
-    "debitsMustEqualCredits": "Total debits must equal total credits"
+    "debitsMustEqualCredits": "Total debits must equal total credits",
+    "resetToDraft": "Entry reset to draft",
+    "voided": "Entry voided"
   },
   "approvals": {
     "title": "Approval Workflows",

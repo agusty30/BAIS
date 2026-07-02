@@ -43,11 +43,15 @@ async function auth(app: FastifyInstance) {
     try {
       const payload = await request.jwtVerify() as { sub: string; email: string; role: Role };
       let permissions: Permission[];
-      try {
-        const [dbRole] = await app.db.select().from(roles).where(eq(roles.name, payload.role)).limit(1);
-        permissions = dbRole ? (dbRole.permissions as Permission[]) : (ROLE_PERMISSIONS[payload.role] || []);
-      } catch {
-        permissions = ROLE_PERMISSIONS[payload.role] || [];
+      if (payload.role === 'admin') {
+        permissions = Object.values(Permission);
+      } else {
+        try {
+          const [dbRole] = await app.db.select().from(roles).where(eq(roles.name, payload.role)).limit(1);
+          permissions = dbRole ? (dbRole.permissions as Permission[]) : (ROLE_PERMISSIONS[payload.role] || []);
+        } catch {
+          permissions = ROLE_PERMISSIONS[payload.role] || [];
+        }
       }
       request.user = { ...payload, permissions };
     } catch {

@@ -114,7 +114,9 @@
     "credit": "Kredit",
     "totals": "Total",
     "entryCreated": "Jurnal berhasil dibuat",
-    "debitsMustEqualCredits": "Total debit harus sama dengan total kredit"
+    "debitsMustEqualCredits": "Total debit harus sama dengan total kredit",
+    "resetToDraft": "Entri dikembalikan ke draf",
+    "voided": "Entri dibatalkan"
   },
   "approvals": {
     "title": "Alur Persetujuan",

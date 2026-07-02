@@ -246,4 +246,77 @@ export async function journalRoutes(app: FastifyInstance) {
     const proof = await app.blockchain.evaluateTransaction('ledger', 'getEntry', entry.id);
     return { recorded: true, txId: entry.blockchainTxId, data: JSON.parse(proof) };
   });
+
+  // Admin: reset orphaned pending_approval entry back to draft
+  app.post('/:id/reset-to-draft', {
+    preHandler: [app.authenticate, requirePermission(Permission.JOURNAL_CREATE)],
+  }, async (request) => {
+    if (request.user.role !== 'admin') {
+      throw new ValidationError('Only admin can reset entries');
+    }
+    const { id } = request.params as { id: string };
+    const [entry] = await app.db.select().from(journalEntries).where(eq(journalEntries.id, id)).limit(1);
+    if (!entry) throw new NotFoundError('Journal Entry');
+    if (entry.status !== 'pending_approval') {
+      throw new ValidationError('Only pending_approval entries can be reset');
+    }
+
+    const [workflow] = await app.db.select().from(approvalWorkflows)
+      .where(eq(approvalWorkflows.journalEntryId, id)).limit(1);
+
+    if (workflow) {
+      await app.db.update(approvalWorkflows)
+        .set({ status: 'rejected', completedAt: new Date() })
+        .where(eq(approvalWorkflows.id, workflow.id));
+    }
+
+    const [updated] = await app.db.update(journalEntries)
+      .set({ status: 'draft', updatedAt: new Date() })
+      .where(eq(journalEntries.id, id))
+      .returning();
+
+    await logAudit(app, request, 'reset_to_draft', 'journal_entry', id, {
+      oldValues: { status: 'pending_approval' }, newValues: { status: 'draft' },
+    });
+
+    return updated;
+  });
+
+  // Admin: void a journal entry (set status to voided)
+  app.post('/:id/void', {
+    preHandler: [app.authenticate, requirePermission(Permission.JOURNAL_CREATE)],
+  }, async (request) => {
+    if (request.user.role !== 'admin') {
+      throw new ValidationError('Only admin can void entries');
+    }
+    const { id } = request.params as { id: string };
+    const [entry] = await app.db.select().from(journalEntries).where(eq(journalEntries.id, id)).limit(1);
+    if (!entry) throw new NotFoundError('Journal Entry');
+    if (entry.status === 'posted') {
+      throw new ValidationError('Posted entries cannot be voided');
+    }
+
+    const [workflow] = await app.db.select().from(approvalWorkflows)
+      .where(eq(approvalWorkflows.journalEntryId, id)).limit(1);
+
+    if (workflow) {
+      await app.db.update(approvalWorkflows)
+        .set({ status: 'rejected', completedAt: new Date() })
+        .where(eq(approvalWorkflows.id, workflow.id));
+    }
+
+    const [updated] = await app.db.update(journalEntries)
+      .set({ status: 'draft', updatedAt: new Date() })
+      .where(eq(journalEntries.id, id))
+      .returning();
+
+    await app.db.delete(journalEntryLines).where(eq(journalEntryLines.journalEntryId, id));
+    await app.db.delete(journalEntries).where(eq(journalEntries.id, id));
+
+    await logAudit(app, request, 'void', 'journal_entry', id, {
+      oldValues: { status: entry.status, entryNumber: entry.entryNumber },
+    });
+
+    return { success: true, message: 'Entry voided and deleted' };
+  });
 }
